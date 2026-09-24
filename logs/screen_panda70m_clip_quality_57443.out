@@ -1,0 +1,47 @@
+===== Screen Panda-70M Clip Quality (VLM zero-shot judge) =====
+Job ID: 57443
+Node: cn7.cds.iisc.in
+Start: Tue Sep  8 03:08:03 PM IST 2026
+Tue Sep  8 15:08:03 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.64.03              Driver Version: 575.64.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA RTX 6000 Ada Gene...    Off |   00000000:A8:00.0 Off |                  Off |
+| 30%   33C    P8             26W /  300W |       2MiB /  49140MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+torch import OK: 2.5.1+cu121 (cuda build 12.1)
+transformers import OK: 5.16.1
+[15:09:29] torch=2.5.1+cu121 device=cuda compute_dtype=torch.bfloat16
+[15:09:29] ======================================================================
+[15:09:29] Loading Qwen2.5-VL-3B-Instruct from /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct (inference only, no training)
+[15:09:29] ======================================================================
+[15:09:32] Loading TwiFF metadata from /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000 ...
+[15:09:51] Found 1879 downloaded clip(s) in /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+[15:09:51] 50 clip(s) to judge this run
+[15:10:33]   [20/50] -copZ50sHMg_3.mp4: MATCH -- The frames show the same basketball game with players in blue and yellow jerseys, and the action of  (running: {'MATCH': 20, 'MISMATCH': 0, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:11:00]   [40/50] 0Pz36ylv1gk_0.mp4: MATCH -- The frames show a kitchen setting with chefs and waitstaff, consistent with the description of the v (running: {'MATCH': 40, 'MISMATCH': 0, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:11:14]   [50/50] 0f4sRmWLCfs_2.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 50, 'MISMATCH': 0, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:11:14] ======================================================================
+[15:11:14] DONE this run. 50 clip(s) judged just now.
+[15:11:14] Cumulative across /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_report.jsonl: 50 clip(s) judged total, 50 MATCH (100.0%)
+[15:11:14] 0 clip(s) flagged for manual review -> /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json
+[15:11:14] ======================================================================
+[15:11:14] NEXT: read quality_screen_flagged.json and manually eyeball a good chunk of it (frames are already saved under _quality_screen_frames/, no re-extraction needed). ALSO manually eyeball a small random sample of MATCH-verdict clips -- this script's judgment is a screening heuristic from a 3B model, not ground truth. See this script's module docstring for the full recommended workflow.
+===== Screen Panda-70M clip quality completed — see /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json =====
+NEXT: manually eyeball a good chunk of quality_screen_flagged.json (frames are already saved
+under /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/_quality_screen_frames/), AND a small random sample of MATCH-verdict clips too
+-- see screen_panda70m_clip_quality.py's module docstring for why both checks matter.
+End: Tue Sep  8 03:11:15 PM IST 2026

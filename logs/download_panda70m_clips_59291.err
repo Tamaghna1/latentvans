@@ -1,0 +1,4 @@
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/download_panda70m_clips.py", line 9
+    set -euo pipefail
+             ^^^^^^^^
+SyntaxError: invalid syntax

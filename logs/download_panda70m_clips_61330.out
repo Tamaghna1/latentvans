@@ -1,0 +1,7 @@
+===== Download Panda-70M Clips (full dataset) =====
+Job ID: 61330
+Node: cn4.cds.iisc.in
+Start: Thu Sep 24 03:35:29 PM IST 2026
+METADATA_DIR=/data/future_l1_50k_metadata_full
+OUTPUT_DIR=/data/panda70m_clips
+NUM_SHARDS=1 SHARD_ID=0

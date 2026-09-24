@@ -1,0 +1,4 @@
+[buffer @ 0x5578becf4b40] Unable to parse option value "-1" as pixel format
+[buffer @ 0x5578becf4b40] Unable to parse option value "-1" as pixel format
+[buffer @ 0x5578becf4b40] Error setting option pix_fmt to value -1.
+[in @ 0x5578bea32940] Error applying options to the filter.

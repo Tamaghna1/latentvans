@@ -1,0 +1,88 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "parquet",
+  "dataset_size": 370407595,
+  "description": "",
+  "download_size": 369276658,
+  "features": {
+    "video": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "answer": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question_images_index": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    },
+    "reasoning_images_index": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    },
+    "meta_data": {
+      "start": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "end": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "matching_score": {
+        "dtype": "float32",
+        "_type": "Value"
+      },
+      "max_magnitude": {
+        "dtype": "float32",
+        "_type": "Value"
+      },
+      "mean_magnitude": {
+        "dtype": "float32",
+        "_type": "Value"
+      },
+      "classification": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "Process": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "Summary": {
+        "dtype": "string",
+        "_type": "Value"
+      }
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 739684253,
+  "splits": {
+    "validation": {
+      "name": "validation",
+      "num_bytes": 370407595,
+      "num_examples": 1447,
+      "dataset_name": "parquet"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

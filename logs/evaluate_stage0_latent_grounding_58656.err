@@ -1,0 +1,15 @@
+WARNING: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val/quality_screen_flagged.json not found -- proceeding WITHOUT validation quality-screen exclusion.
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 32796.92it/s]
+/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:1377: UserWarning: Model has `tie_word_embeddings=True` and a tied layer is part of the adapter, but `ensure_weight_tying` is not set to True. This can lead to complications, for example when merging the adapter or converting your model to formats other than safetensors. Check the discussion here: https://github.com/huggingface/peft/issues/2777
+  warnings.warn(msg)
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10586.58it/s]
+/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:1377: UserWarning: Model has `tie_word_embeddings=True` and a tied layer is part of the adapter, but `ensure_weight_tying` is not set to True. This can lead to complications, for example when merging the adapter or converting your model to formats other than safetensors. Check the discussion here: https://github.com/huggingface/peft/issues/2777
+  warnings.warn(msg)
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 14920.81it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10802.02it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10586.06it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10772.16it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10514.02it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10849.60it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10763.40it/s]
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 10764.47it/s]

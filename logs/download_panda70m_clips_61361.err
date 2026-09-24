@@ -1,0 +1,25 @@
+[h264 @ 0x7f06380a4840] mmco: unref short failure
+[h264 @ 0x7f06380a4840] mmco: unref short failure
+[h264 @ 0x7f063416d540] mmco: unref short failure
+[h264 @ 0x7f063416d540] mmco: unref short failure
+[h264 @ 0x7f0640025300] mmco: unref short failure
+[h264 @ 0x7f0640014980] mmco: unref short failure
+[h264 @ 0x7f0640014980] mmco: unref short failure
+[buffer @ 0x7f063c068d80] Unable to parse option value "-1" as pixel format
+[buffer @ 0x7f063c068d80] Unable to parse option value "-1" as pixel format
+[buffer @ 0x7f063c068d80] Error setting option pix_fmt to value -1.
+[in @ 0x7f063c15fe80] Error applying options to the filter.
+[h264 @ 0x7f06380a4580] mmco: unref short failure
+[h264 @ 0x7f06344dd080] mmco: unref short failure
+[h264 @ 0x7f06344dd080] mmco: unref short failure
+[h264 @ 0x7f06344dd080] mmco: unref short failure
+[h264 @ 0x7f06344dd080] mmco: unref short failure
+[h264 @ 0x7f063c787080] mmco: unref short failure
+[h264 @ 0x7f063c787080] mmco: unref short failure
+[h264 @ 0x7f063400a180] mmco: unref short failure
+[h264 @ 0x7f063c0220c0] mmco: unref short failure
+[h264 @ 0x7f063c0220c0] mmco: unref short failure
+[h264 @ 0x7f0634006980] mmco: unref short failure
+[h264 @ 0x7f06403644c0] mmco: unref short failure
+[h264 @ 0x7f06403644c0] mmco: unref short failure
+slurmstepd: error: *** JOB 61361 ON cn1 CANCELLED AT 2026-09-25T01:15:45 ***

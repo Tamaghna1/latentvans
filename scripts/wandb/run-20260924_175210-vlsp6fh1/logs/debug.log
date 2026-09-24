@@ -1,0 +1,19 @@
+2026-09-24 17:52:10,088 INFO    MainThread:2747232 [wandb_setup.py:_flush():81] Current SDK version is 0.30.0
+2026-09-24 17:52:10,088 INFO    MainThread:2747232 [wandb_setup.py:_flush():81] Configure stats pid to 2747232
+2026-09-24 17:52:10,089 INFO    MainThread:2747232 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-09-24 17:52:10,089 INFO    MainThread:2747232 [wandb_init.py:setup_run_log_directory():739] Logging user logs to /scratch/users/anirban/tamaghnam/latentvans/scripts/wandb/run-20260924_175210-vlsp6fh1/logs/debug.log
+2026-09-24 17:52:10,089 INFO    MainThread:2747232 [wandb_init.py:setup_run_log_directory():740] Logging internal logs to /scratch/users/anirban/tamaghnam/latentvans/scripts/wandb/run-20260924_175210-vlsp6fh1/logs/debug-internal.log
+2026-09-24 17:52:10,089 INFO    MainThread:2747232 [wandb_init.py:init():783] calling init triggers
+2026-09-24 17:52:10,089 INFO    MainThread:2747232 [wandb_init.py:init():788] wandb.init called with sweep_config: {}
+config: {'qwen_dir': '/scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct', 'metadata_dir': '/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full', 'video_root': '/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips', 'output_dir': '/scratch/users/anirban/tamaghnam/latentvans/checkpoints/stage0_futurel150k_run1', 'resume_from': None, 'exclude_flagged_json': None, 'val_metadata_dir': '/scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_val', 'val_video_root': '/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val', 'val_exclude_flagged_json': None, 'eval_every': None, 'eval_max_examples': 200, 'frames_root': '/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames', 'val_frames_root': None, 'wandb_project': 'latentvans-stage0', 'wandb_entity': None, 'wandb_run_name': None, 'latent_span_len': 4, 'lambda_latent': 0.1, 'max_answer_chars': 1500, 'use_lora': True, 'lora_r': 8, 'lora_alpha': 16, 'lora_dropout': 0.05, 'lora_target_modules': 'q_proj,k_proj,v_proj,o_proj', 'batch_size': 1, 'grad_accum_steps': 8, 'lr': 0.0002, 'warmup_steps': 50, 'max_steps': 6000, 'save_every': 600, 'log_every': 10, 'dtype': 'bf16', 'device': 'auto', 'gradient_checkpointing': True, 'seed': 0, '_wandb': {}}
+2026-09-24 17:52:10,090 INFO    MainThread:2747232 [wandb_init.py:init():831] starting backend
+2026-09-24 17:52:10,090 INFO    MainThread:2747232 [wandb_init.py:init():846] sending inform_init request
+2026-09-24 17:52:10,135 INFO    MainThread:2747232 [wandb_init.py:init():851] backend started and connected
+2026-09-24 17:52:10,211 INFO    MainThread:2747232 [wandb_init.py:init():921] updated telemetry
+2026-09-24 17:52:10,219 INFO    MainThread:2747232 [wandb_init.py:init():944] communicating run to backend with 90.0 second timeout
+2026-09-24 17:52:11,776 INFO    MainThread:2747232 [wandb_init.py:init():981] starting run threads in backend
+2026-09-24 17:52:11,946 INFO    MainThread:2747232 [wandb_run.py:_console_start():2531] atexit reg
+2026-09-24 17:52:11,946 INFO    MainThread:2747232 [wandb_run.py:_redirect():2381] redirect: wrap_raw
+2026-09-24 17:52:11,947 INFO    MainThread:2747232 [wandb_run.py:_redirect():2450] Wrapping output streams.
+2026-09-24 17:52:11,947 INFO    MainThread:2747232 [wandb_run.py:_redirect():2473] Redirects installed.
+2026-09-24 17:52:11,960 INFO    MainThread:2747232 [wandb_init.py:init():1019] run started, returning control to user process

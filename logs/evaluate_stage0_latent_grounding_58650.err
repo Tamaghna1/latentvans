@@ -1,0 +1,5 @@
+WARNING: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val/quality_screen_flagged.json not found -- proceeding WITHOUT validation quality-screen exclusion.
+Traceback (most recent call last):
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/evaluate_stage0_latent_grounding.py", line 116, in <module>
+    from train_stage0_latent_grounding import (  # noqa: E402
+ImportError: cannot import name 'evaluate' from 'train_stage0_latent_grounding' (/scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py)

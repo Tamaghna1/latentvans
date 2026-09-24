@@ -1,0 +1,68 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "video": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "answer": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "question_images_index": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    },
+    "reasoning_images_index": {
+      "feature": {
+        "dtype": "int64",
+        "_type": "Value"
+      },
+      "_type": "List"
+    },
+    "meta_data": {
+      "Process": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "Summary": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "classification": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "end": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "matching_score": {
+        "dtype": "float64",
+        "_type": "Value"
+      },
+      "max_magnitude": {
+        "dtype": "float64",
+        "_type": "Value"
+      },
+      "mean_magnitude": {
+        "dtype": "float64",
+        "_type": "Value"
+      },
+      "start": {
+        "dtype": "string",
+        "_type": "Value"
+      }
+    }
+  },
+  "homepage": "",
+  "license": ""
+}

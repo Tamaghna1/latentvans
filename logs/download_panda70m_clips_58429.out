@@ -1,0 +1,6 @@
+===== Download Panda-70M Clips (full dataset) =====
+Job ID: 58429
+Node: cn1.cds.iisc.in
+Start: Sat Sep 12 07:06:20 PM IST 2026
+METADATA_DIR=/data/twiff_metadata_val
+OUTPUT_DIR=/data/panda70m_clips_val

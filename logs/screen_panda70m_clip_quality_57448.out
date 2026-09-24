@@ -1,0 +1,136 @@
+===== Screen Panda-70M Clip Quality (VLM zero-shot judge) =====
+Job ID: 57448
+Node: cn7.cds.iisc.in
+Start: Tue Sep  8 03:16:41 PM IST 2026
+Tue Sep  8 15:16:41 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.64.03              Driver Version: 575.64.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA RTX 6000 Ada Gene...    Off |   00000000:27:00.0 Off |                  Off |
+| 30%   36C    P8             27W /  300W |       2MiB /  49140MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+torch import OK: 2.5.1+cu121 (cuda build 12.1)
+transformers import OK: 5.16.1
+[15:16:53] torch=2.5.1+cu121 device=cuda compute_dtype=torch.bfloat16
+[15:16:53] ======================================================================
+[15:16:53] Loading Qwen2.5-VL-3B-Instruct from /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct (inference only, no training)
+[15:16:53] ======================================================================
+[15:16:56] Loading TwiFF metadata from /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000 ...
+[15:16:57] Found 1879 downloaded clip(s) in /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+[15:16:57] 50 clip(s) already judged in a prior run of /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_report.jsonl -- skipping those
+[15:16:57] 1829 clip(s) to judge this run
+[15:17:24]   [20/1829] 1Imci3bumD0_29.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 19, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:17:51]   [40/1829] 1uBl8wj6Ki8_30.mp4: MATCH -- The frames show the same person in a red hoodie attempting to climb over a fence, with another perso (running: {'MATCH': 39, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:18:18]   [60/1829] 2Nri2mHBWyA_19.mp4: MATCH -- The frames show the same setting with a person whisking chocolate in a pot, and the motion of the wh (running: {'MATCH': 59, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:18:44]   [80/1829] 2le9Tu4LdC4_6.mp4: MATCH -- The frames show the same white SUV at a car show, with the camera moving from a close-up of the side (running: {'MATCH': 79, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:19:13]   [100/1829] 3Qg4UYEl5hQ_8.mp4: MATCH -- The frames show a consistent setting with a hand pointing at a sign, a man standing in front of a re (running: {'MATCH': 99, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:19:40]   [120/1829] 41Q20-HLaIQ_41.mp4: MATCH -- The frames show a consistent setting with a miniature town setup, water flow from a plastic containe (running: {'MATCH': 119, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:20:06]   [140/1829] 4eJ_2JjXysg_54.mp4: MATCH -- The frames show two individuals in a snowy environment, both wearing winter clothing and engaging in (running: {'MATCH': 139, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:20:36]   [160/1829] 5KtkRUTupAM_6.mp4: MATCH -- The frames show the same setting, objects (car and road), and actions (driving on a winding road) as (running: {'MATCH': 159, 'MISMATCH': 1, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:21:04]   [180/1829] 61HoJtjm8fk_14.mp4: MATCH -- The frames depict the same cooking process as described in the question and answer, including the ad (running: {'MATCH': 178, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:21:29]   [200/1829] 6XdRQAGi9LQ_3.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 198, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:21:55]   [220/1829] 7BoQjtRnEfs_2.mp4: MATCH -- The frames show a similar setting with a focus on chainsaws, maintaining consistency in the objects  (running: {'MATCH': 218, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:22:22]   [240/1829] 7r_CUZJnsKA_51.mp4: MATCH -- The frames show the same setting with the same person and objects, and the actions described in the  (running: {'MATCH': 238, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:22:48]   [260/1829] 8bpAad6fM84_1.mp4: MATCH -- The frames show the same setting of a kitchen with the same person wearing an apron, and the same ac (running: {'MATCH': 258, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:23:13]   [280/1829] 9KAbWYgOLCc_6.mp4: MATCH -- The frames show the same setting with the same objects and actions as described in the question and  (running: {'MATCH': 278, 'MISMATCH': 2, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:23:41]   [300/1829] A7I5Aew8ZSw_3.mp4: MATCH -- The frames depict the same hockey player in similar positions, performing the same action of skating (running: {'MATCH': 297, 'MISMATCH': 3, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:24:07]   [320/1829] B5a-fe6fHoY_2.mp4: MATCH -- The frames depict the smartphone screen being unlocked and then lifted, which aligns with the descri (running: {'MATCH': 317, 'MISMATCH': 3, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:24:33]   [340/1829] BslmaYBXl6o_0.mp4: MATCH -- The frames show the same setting, characters, and actions as described in the question and answer. (running: {'MATCH': 337, 'MISMATCH': 3, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:24:59]   [360/1829] CTnc6fKpVPc_1.mp4: MATCH -- The frames show the same setting with the person using the power drill to mix the cement in the buck (running: {'MATCH': 357, 'MISMATCH': 3, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:25:27]   [380/1829] D9eraggDWA0_7.mp4: MATCH -- The frames show the same setting of a residential street with parked cars and a motorcycle rider, an (running: {'MATCH': 377, 'MISMATCH': 3, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:25:55]   [400/1829] Dyy6q07oFk0_2.mp4: MATCH -- The frames show a close-up of a person's hand on a guitar neck, which matches the description of the (running: {'MATCH': 396, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:26:22]   [420/1829] EfHaH3Mr0U0_10.mp4: MATCH -- The frames show the same setting, people, objects, and actions as described in the question and answ (running: {'MATCH': 416, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:26:47]   [440/1829] FSUecMtuwjo_0.mp4: MATCH -- The frames show the same setting with the same objects and actions as described in the question and  (running: {'MATCH': 436, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:27:12]   [460/1829] GEIv7zfEKUw_1.mp4: MATCH -- The frames show the same setting with a jade plant in a pot, and the actions described in the questi (running: {'MATCH': 456, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:27:37]   [480/1829] Gr2oFPfAg90_7.mp4: MATCH -- The frames show the same setting with the person's hands working on the engine, which aligns with th (running: {'MATCH': 476, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:28:04]   [500/1829] HQz8-PbSWRQ_13.mp4: MATCH -- The frames show a consistent setting with the same people and objects, and the action of cutting hai (running: {'MATCH': 496, 'MISMATCH': 4, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:28:30]   [520/1829] I0rf42xHz3M_0.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 514, 'MISMATCH': 6, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:28:56]   [540/1829] IzAf2jGH5n0_2.mp4: MATCH -- The frames show consistent elements such as firefighters, hoses, smoke, and a helicopter, supporting (running: {'MATCH': 533, 'MISMATCH': 7, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:29:23]   [560/1829] JiJ5WpTgYgY_5.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 552, 'MISMATCH': 8, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:29:52]   [580/1829] KB26xOEbHYk_15.mp4: MATCH -- The frames show the same setting with the same people and objects, and the actions described in the  (running: {'MATCH': 571, 'MISMATCH': 9, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:30:19]   [600/1829] L4dgjsVT31Q_16.mp4: MATCH -- The frames show the same setting, people, and action as described in the question and answer. (running: {'MATCH': 591, 'MISMATCH': 9, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:30:46]   [620/1829] LlnQmzdpxNg_11.mp4: MATCH -- The frames show the same setting, objects, and actions as described in the question and answer. (running: {'MATCH': 609, 'MISMATCH': 11, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:31:13]   [640/1829] Mc1UPFbJPZs_5.mp4: MATCH -- The frames show the same person performing the same action as described in the question and answer. (running: {'MATCH': 628, 'MISMATCH': 12, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:31:40]   [660/1829] MzUhupRyLzw_20.mp4: MATCH -- The frames show the same setting, objects, and action as described in the question and answer. (running: {'MATCH': 648, 'MISMATCH': 12, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:32:06]   [680/1829] NgV3Ne5YheU_9.mp4: MATCH -- The frames show the same setting with the iPad holder being adjusted to demonstrate its flexibility  (running: {'MATCH': 668, 'MISMATCH': 12, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:32:31]   [700/1829] OXtwwJYMfQk_17.mp4: MATCH -- The frames depict the same setting with the same objects and actions as described in the question an (running: {'MATCH': 688, 'MISMATCH': 12, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:32:58]   [720/1829] PN012wqGnys_1.mp4: MATCH -- The frames depict the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 708, 'MISMATCH': 12, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:33:24]   [740/1829] Q0vNC3WQi5M_10.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 727, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:33:51]   [760/1829] QfDUI1IirTk_7.mp4: MATCH -- The frames show the same control panel with the illuminated 'Floor' button, consistent with the desc (running: {'MATCH': 747, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:34:18]   [780/1829] RMwNcxtvWH4_2.mp4: MATCH -- The frames show the same setting with the same people and objects, and the actions described in the  (running: {'MATCH': 767, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:34:47]   [800/1829] RtsFrwM-zMg_0.mp4: MATCH -- The frames show the same setting with the same person and objects, and the actions described in the  (running: {'MATCH': 787, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:35:13]   [820/1829] SRixnqjL6tE_3.mp4: MATCH -- The frames depict a baseball game scenario consistent with the described actions and setting. (running: {'MATCH': 807, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:35:43]   [840/1829] TUQc5qZHXdw_5.mp4: MATCH -- The frames show hands holding a piece of ham, which aligns with the action described in the question (running: {'MATCH': 827, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:36:13]   [860/1829] TtJIqkcl6tA_4.mp4: MATCH -- The frames show the same cooking process with the same ingredients and actions as described in the q (running: {'MATCH': 847, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:36:42]   [880/1829] UizZS_kkE14_23.mp4: MATCH -- The frames depict the same boxing match with the same setting, people, and action as described in th (running: {'MATCH': 867, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:37:07]   [900/1829] VDBQyDG5NuE_16.mp4: MATCH -- The frames depict the same setting, people, objects, and actions as described in the question and an (running: {'MATCH': 887, 'MISMATCH': 13, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:37:33]   [920/1829] VlLFsRzd9MI_16.mp4: MATCH -- The frames show two smartphones being held side by side, with one displaying a translation app and t (running: {'MATCH': 906, 'MISMATCH': 14, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:37:59]   [940/1829] WKq9YYisPgA_19.mp4: MISMATCH -- The second frame shows a different scene with two boxers facing each other in a boxing ring, which d (running: {'MATCH': 925, 'MISMATCH': 15, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:38:25]   [960/1829] WtRu4eHOZd0_5.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 944, 'MISMATCH': 16, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:38:51]   [980/1829] XXINWswQtGk_131.mp4: MATCH -- The frames depict the same setting, people, objects, and actions as described in the question and an (running: {'MATCH': 964, 'MISMATCH': 16, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:39:17]   [1000/1829] YDOw7Rh42wk_43.mp4: MATCH -- The frames show the car navigating a curve, consistent with the description of the video. (running: {'MATCH': 983, 'MISMATCH': 17, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:39:43]   [1020/1829] YvbXh2ySPY0_3.mp4: MATCH -- The frames show the same setting with the jack and wood in place, indicating the same action as desc (running: {'MATCH': 1003, 'MISMATCH': 17, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:40:09]   [1040/1829] ZaoHEXBV0fI_32.mp4: MATCH -- The frames depict the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1023, 'MISMATCH': 17, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:40:37]   [1060/1829] _A-1tPTt4js_6.mp4: MATCH -- The frames show the same setting of a person working on a pipe, with the person's hands and the tool (running: {'MATCH': 1042, 'MISMATCH': 18, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:41:03]   [1080/1829] _vG9EUT2vKc_14.mp4: MATCH -- The frames depict a baseball game with players on the field, a batter, a pitcher, and a catcher, whi (running: {'MATCH': 1061, 'MISMATCH': 19, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:41:31]   [1100/1829] aVRv0wzoP_U_1.mp4: MISMATCH -- The frames do not show the motorcyclist leaning into the curve or extending their left arm, which ar (running: {'MATCH': 1080, 'MISMATCH': 20, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:41:59]   [1120/1829] b7a03z-eDi4_2.mp4: MATCH -- The frames depict the same setting with the same objects and actions as described in the question an (running: {'MATCH': 1100, 'MISMATCH': 20, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:42:26]   [1140/1829] byRcP3cFiP8_6.mp4: MATCH -- The frames show the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1120, 'MISMATCH': 20, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:42:53]   [1160/1829] cbTczLNQ1Ow_2.mp4: MATCH -- The frames depict the same setting with hands adjusting a blue floral-patterned book on a cutting ma (running: {'MATCH': 1140, 'MISMATCH': 20, 'PARSE_ERROR': 0, 'NO_METADATA': 0})
+[15:43:18]   [1180/1829] daJUkuzrqW8_89.mp4: MATCH -- The frames show the same orange sports car in the same location with no changes in the setting, obje (running: {'MATCH': 1159, 'MISMATCH': 20, 'PARSE_ERROR': 1, 'NO_METADATA': 0})
+[15:43:44]   [1200/1829] eMnyDbZ-kWA_5.mp4: MATCH -- The frames depict the same setting with the man interacting with the same objects and actions descri (running: {'MATCH': 1179, 'MISMATCH': 20, 'PARSE_ERROR': 1, 'NO_METADATA': 0})
+[15:44:36]   [1240/1829] fWZmUK3ygAI_7.mp4: MATCH -- The frames show the same person in the same setting, performing the same actions as described in the (running: {'MATCH': 1216, 'MISMATCH': 22, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:45:01]   [1260/1829] gR3epipzDFY_4.mp4: MISMATCH -- The provided frames do not match the description of the scene in the question and answer. (running: {'MATCH': 1235, 'MISMATCH': 23, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:45:27]   [1280/1829] h2OolZEvS-A_6.mp4: MATCH -- The frames show the same setting with the person using the stick to interact with the bush, which al (running: {'MATCH': 1254, 'MISMATCH': 24, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:45:53]   [1300/1829] he39uhFNQw8_21.mp4: MATCH -- The frames depict the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1274, 'MISMATCH': 24, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:46:19]   [1320/1829] iUgvkwSXozs_39.mp4: MATCH -- The frames show a consistent setting with the woman walking through a dimly lit hallway with colorfu (running: {'MATCH': 1293, 'MISMATCH': 25, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:46:46]   [1340/1829] j3COFDXr1S8_13.mp4: MATCH -- The frames show a hand reaching into different sections of a candy aisle, which aligns with the desc (running: {'MATCH': 1313, 'MISMATCH': 25, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:47:12]   [1360/1829] jVuh8xXKW0o_0.mp4: MATCH -- The frames show the same setting with the player using a pickaxe to break blocks, which aligns with  (running: {'MATCH': 1333, 'MISMATCH': 25, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:47:40]   [1380/1829] kD_QVyK3MI8_3.mp4: MATCH -- The frames depict a similar setting with a player aiming a gun at a rocky terrain, suggesting contin (running: {'MATCH': 1352, 'MISMATCH': 26, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:48:05]   [1400/1829] l5MRWNXPVQQ_2.mp4: MATCH -- The frames show the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 1372, 'MISMATCH': 26, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:48:31]   [1420/1829] l_jcFkzCiLM_15.mp4: MATCH -- The frames show the same setting, objects, and actions as described in the question and answer. (running: {'MATCH': 1392, 'MISMATCH': 26, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:48:58]   [1440/1829] mJVnFN4CmAI_2.mp4: MATCH -- The frames show the same person in the same setting, holding the bow and arrow, and the actions desc (running: {'MATCH': 1411, 'MISMATCH': 27, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:49:25]   [1460/1829] n6ektj-FVgo_2.mp4: MATCH -- The frames depict a green Kawasaki four-wheeler, which matches the setting described in the question (running: {'MATCH': 1431, 'MISMATCH': 27, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:49:52]   [1480/1829] nzveycM7hLk_6.mp4: MATCH -- The frames show a consistent view of the skate park environment, highlighting the concrete and grass (running: {'MATCH': 1451, 'MISMATCH': 27, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:50:19]   [1500/1829] ocDXngboB0Q_77.mp4: MATCH -- The frames show the same setting with a hand pointing at a wooden ceiling panel, indicating the same (running: {'MATCH': 1471, 'MISMATCH': 27, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:50:44]   [1520/1829] pCzVDJzzuJw_1.mp4: MATCH -- The frames show a hand adjusting a plastic container within a white lid, consistent with the describ (running: {'MATCH': 1491, 'MISMATCH': 27, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:51:13]   [1540/1829] qQh4tEwVLo0_10.mp4: MATCH -- The frames show athletes in wheelchairs at the starting line, preparing to start a race, which align (running: {'MATCH': 1510, 'MISMATCH': 28, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:51:37]   [1560/1829] r1XrmQyWJoE_15.mp4: MATCH -- The frames show the woman in the same setting, using the same brush and demonstrating the same brush (running: {'MATCH': 1530, 'MISMATCH': 28, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:52:04]   [1580/1829] r_a4MOOcrfk_9.mp4: MATCH -- The frames depict the same setting with the police officer performing similar actions, including put (running: {'MATCH': 1549, 'MISMATCH': 29, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:52:31]   [1600/1829] s2neKiD6XJU_13.mp4: MATCH -- The frames depict the same setting with the same objects and actions as described in the question an (running: {'MATCH': 1568, 'MISMATCH': 30, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:52:57]   [1620/1829] soLQWmePmMs_2.mp4: MATCH -- The frames depict a baseball game with players in positions similar to those described in the questi (running: {'MATCH': 1588, 'MISMATCH': 30, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:53:24]   [1640/1829] tdZum9Tc6ds_0.mp4: MATCH -- The frames show the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1608, 'MISMATCH': 30, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:53:49]   [1660/1829] uNrzN2zTmdU_34.mp4: MATCH -- The frames show the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1627, 'MISMATCH': 31, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:54:16]   [1680/1829] uskI7ZWvqGM_24.mp4: MATCH -- The frames show the same setting of a car's interior, focusing on the seat and center console, which (running: {'MATCH': 1646, 'MISMATCH': 32, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:54:41]   [1700/1829] vZhxGH21JKY_2.mp4: MATCH -- The frames depict the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1666, 'MISMATCH': 32, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:55:08]   [1720/1829] wLj__1vPQcE_2.mp4: MATCH -- The frames depict the same setting, people, and action as described in the question and answer. (running: {'MATCH': 1686, 'MISMATCH': 32, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:55:33]   [1740/1829] wukUK0Nuxx8_3.mp4: MATCH -- The frames show the bulldozer moving closer to the camera, which aligns with the description of the  (running: {'MATCH': 1705, 'MISMATCH': 33, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:55:56]   [1760/1829] xJ7si2CxJ0A_8.mp4: MATCH -- The frames show the same setting with the iPad being interacted with, indicating the same actions as (running: {'MATCH': 1725, 'MISMATCH': 33, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:56:22]   [1780/1829] y6k8eucDKIc_3.mp4: MATCH -- The frames depict a similar setting with people interacting and a musical performance, suggesting co (running: {'MATCH': 1745, 'MISMATCH': 33, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:56:50]   [1800/1829] z9LlecSHMvo_0.mp4: MATCH -- The frames show the same setting of a person fishing from a kayak, with the person lifting the fishi (running: {'MATCH': 1765, 'MISMATCH': 33, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:57:16]   [1820/1829] zfAiekSLlQw_6.mp4: MATCH -- The frames depict the same setting, people, and objects as described in the question and answer. (running: {'MATCH': 1785, 'MISMATCH': 33, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:57:28]   [1829/1829] zwONfDHxmCA_10.mp4: MATCH -- The frames show the same setting, people, objects, and action as described in the question and answe (running: {'MATCH': 1793, 'MISMATCH': 34, 'PARSE_ERROR': 2, 'NO_METADATA': 0})
+[15:57:28] ======================================================================
+[15:57:28] DONE this run. 1829 clip(s) judged just now.
+[15:57:28] Cumulative across /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_report.jsonl: 1879 clip(s) judged total, 1843 MATCH (98.1%)
+[15:57:28] 36 clip(s) flagged for manual review -> /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json
+[15:57:28] ======================================================================
+[15:57:28] NEXT: read quality_screen_flagged.json and manually eyeball a good chunk of it (frames are already saved under _quality_screen_frames/, no re-extraction needed). ALSO manually eyeball a small random sample of MATCH-verdict clips -- this script's judgment is a screening heuristic from a 3B model, not ground truth. See this script's module docstring for the full recommended workflow.
+===== Screen Panda-70M clip quality completed — see /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json =====
+NEXT: manually eyeball a good chunk of quality_screen_flagged.json (frames are already saved
+under /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/_quality_screen_frames/), AND a small random sample of MATCH-verdict clips too
+-- see screen_panda70m_clip_quality.py's module docstring for why both checks matter.
+End: Tue Sep  8 03:57:30 PM IST 2026

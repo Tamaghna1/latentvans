@@ -1,0 +1,58 @@
+===== Download Panda-70M Clips (full dataset) =====
+Job ID: 57533
+Node: cn1.cds.iisc.in
+Start: Tue Sep  8 09:53:29 PM IST 2026
+Requirement already satisfied: yt-dlp in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (2026.8.19)
+Requirement already satisfied: datasets in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (5.0.1)
+Requirement already satisfied: filelock in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.32.5)
+Requirement already satisfied: numpy>=1.17 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.4.6)
+Requirement already satisfied: pyarrow>=21.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (25.0.1)
+Requirement already satisfied: dill<0.4.2,>=0.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.4.1)
+Requirement already satisfied: pandas in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.0.5)
+Requirement already satisfied: requests>=2.32.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.34.2)
+Requirement already satisfied: httpx<1.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.28.1)
+Requirement already satisfied: tqdm>=4.66.3 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.70.0)
+Requirement already satisfied: xxhash in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.0.1)
+Requirement already satisfied: multiprocess<0.70.20 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.70.19)
+Requirement already satisfied: fsspec<=2026.6.0,>=2023.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2026.6.0)
+Requirement already satisfied: huggingface-hub<2.0,>=0.25.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (1.30.0)
+Requirement already satisfied: packaging in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (26.3)
+Requirement already satisfied: pyyaml>=5.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (6.0.3)
+Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (3.14.3)
+Requirement already satisfied: anyio in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (4.15.1)
+Requirement already satisfied: certifi in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (1.0.9)
+Requirement already satisfied: idna in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (3.19)
+Requirement already satisfied: h11>=0.16 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpcore==1.*->httpx<1.0.0->datasets) (0.16.0)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (8.5.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.5.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (1.6.0)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (4.16.0)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2.7.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (0.5.2)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.24.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (2.7.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from pandas->datasets) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas->datasets) (1.17.0)
+FORCE_RECUT=1 -- passing --force_recut (one-time corrective re-cut: EVERY target clip will
+be re-downloaded/re-cut and will overwrite whatever is currently in $OUTPUT_DIR).
+[21:53:39] ======================================================================
+[21:53:39] Loading all TwiFF targets from /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000
+[21:53:39] ======================================================================
+[21:53:44] 2000 distinct clip files targeted for this run (start/end taken directly from each row's own meta_data)
+[21:53:44] --force_recut is set: the skip-if-already-exists resume check is DISABLED. Every target clip will be freshly re-downloaded/re-cut and will OVERWRITE whatever is currently in --output_dir. This is meant for a one-time corrective run over an --output_dir that may hold stale clips from an older/buggy run -- see module docstring, 'CONFIRMED BUG (2026-09-08)'.
+[21:53:44] 1999 distinct source YouTube videos among those targets
+[21:53:44] ======================================================================
+[21:53:44] Downloading + cutting clips (grouped by source video)
+[21:53:44] ======================================================================
+[21:53:44]   [video 1/1999] yt-dlp GsTzCoJ89GI (1 clip(s) needed) ...
+[21:53:55]     [1/2000] cutting GsTzCoJ89GI_4.mp4 (0:01:08.501 -> 0:01:14.307)
+[21:53:55]   [video 2/1999] yt-dlp G252maEM8v8 (1 clip(s) needed) ...
+[21:54:03]     [2/2000] cutting G252maEM8v8_1.mp4 (0:00:09.843 -> 0:00:16.950)
+[21:54:03]   [video 3/1999] yt-dlp VJ7mgFe5xyQ (1 clip(s) needed) ...
+[21:54:11]     [3/2000] cutting VJ7mgFe5xyQ_2.mp4 (0:01:36.629 -> 0:01:53.546)
+[21:54:11]   [video 4/1999] yt-dlp -ulfn1GPrIo (1 clip(s) needed) ...

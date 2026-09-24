@@ -1,0 +1,36 @@
+WARNING: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val/quality_screen_flagged.json not found -- proceeding WITHOUT validation quality-screen exclusion.
+usage: evaluate_stage0_latent_grounding.py [-h] --qwen_dir QWEN_DIR
+                                           --metadata_dir METADATA_DIR
+                                           --video_root VIDEO_ROOT
+                                           --output_dir OUTPUT_DIR
+                                           [--resume_from RESUME_FROM]
+                                           [--exclude_flagged_json EXCLUDE_FLAGGED_JSON]
+                                           [--val_metadata_dir VAL_METADATA_DIR]
+                                           [--val_video_root VAL_VIDEO_ROOT]
+                                           [--val_exclude_flagged_json VAL_EXCLUDE_FLAGGED_JSON]
+                                           [--eval_every EVAL_EVERY]
+                                           [--eval_max_examples EVAL_MAX_EXAMPLES]
+                                           [--wandb_project WANDB_PROJECT]
+                                           [--wandb_entity WANDB_ENTITY]
+                                           [--wandb_run_name WANDB_RUN_NAME]
+                                           [--latent_span_len LATENT_SPAN_LEN]
+                                           [--lambda_latent LAMBDA_LATENT]
+                                           [--max_answer_chars MAX_ANSWER_CHARS]
+                                           [--use_lora] [--no_lora]
+                                           [--lora_r LORA_R]
+                                           [--lora_alpha LORA_ALPHA]
+                                           [--lora_dropout LORA_DROPOUT]
+                                           [--lora_target_modules LORA_TARGET_MODULES]
+                                           [--batch_size BATCH_SIZE]
+                                           [--grad_accum_steps GRAD_ACCUM_STEPS]
+                                           [--lr LR]
+                                           [--warmup_steps WARMUP_STEPS]
+                                           [--max_steps MAX_STEPS]
+                                           [--save_every SAVE_EVERY]
+                                           [--log_every LOG_EVERY]
+                                           [--dtype {bf16,fp16,fp32}]
+                                           [--device {auto,cuda,cpu}]
+                                           [--gradient_checkpointing]
+                                           [--no_gradient_checkpointing]
+                                           [--seed SEED]
+evaluate_stage0_latent_grounding.py: error: the following arguments are required: --metadata_dir, --video_root, --output_dir

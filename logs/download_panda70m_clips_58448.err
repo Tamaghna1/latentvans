@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/download_panda70m_clips.py", line 442, in <module>
+    main()
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/download_panda70m_clips.py", line 382, in main
+    ok, err = download_source_video(video_id, args.cookies_file, args.max_height, raw_path)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/download_panda70m_clips.py", line 272, in download_source_video
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/subprocess.py", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/subprocess.py", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['yt-dlp', 'https://www.youtube.com/watch?v=s0lCx-poYe0', '-f', 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best', '-o', '/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val/_raw_downloads/s0lCx-poYe0.mp4', '--no-progress', '--quiet', '--no-warnings']' timed out after 300 seconds

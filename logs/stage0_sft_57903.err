@@ -1,0 +1,20 @@
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/anirban/tamaghnam/.netrc.
+wandb: Currently logged in as: tamaghna-mandal09 (tamaghna-mandal09-indian-institute-of-science) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run ipz8em0m
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /scratch/users/anirban/tamaghnam/latentvans/scripts/wandb/run-20260909_183832-ipz8em0m
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run stage0-57903
+wandb: ⭐️ View project at https://wandb.ai/tamaghna-mandal09-indian-institute-of-science/stage0
+wandb: 🚀 View run at https://wandb.ai/tamaghna-mandal09-indian-institute-of-science/stage0/runs/ipz8em0m
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 16250.27it/s]
+/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:1377: UserWarning: Model has `tie_word_embeddings=True` and a tied layer is part of the adapter, but `ensure_weight_tying` is not set to True. This can lead to complications, for example when merging the adapter or converting your model to formats other than safetensors. Check the discussion here: https://github.com/huggingface/peft/issues/2777
+  warnings.warn(msg)
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+Traceback (most recent call last):
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py", line 781, in <module>
+    main()
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py", line 721, in main
+    loss_latent = F.mse_loss(h_latent.float(), target.unsqueeze(0).expand_as(h_latent).float())
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (2048) must match the existing size (1280) at non-singleton dimension 1.  Target sizes: [4, 2048].  Tensor sizes: [1, 1280]

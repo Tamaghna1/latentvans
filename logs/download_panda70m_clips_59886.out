@@ -1,0 +1,7 @@
+===== Download Panda-70M Clips (full dataset) =====
+Job ID: 59886
+Node: cn1.cds.iisc.in
+Start: Sat Sep 19 01:42:23 AM IST 2026
+METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full
+OUTPUT_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+NUM_SHARDS=2 SHARD_ID=1

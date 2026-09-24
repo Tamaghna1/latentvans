@@ -1,0 +1,77 @@
+===== Data Staging: Checkpoints, Repos, TwiFF Metadata =====
+Job ID: 59179
+Node: cn3.cds.iisc.in
+Start: Wed Sep 16 02:53:12 PM IST 2026
+TRAIN_DATA_SOURCE=future_l1_50k
+TRAIN_SAMPLE_SIZE=<unset -- all rows>
+METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full
+Python: /scratch/users/anirban/tamaghnam/envs/latentvans/bin/python
+Python 3.11.16
+Requirement already satisfied: pip in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (26.2.1)
+Requirement already satisfied: huggingface_hub in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (1.31.0)
+Requirement already satisfied: datasets in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (5.0.1)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (8.5.0)
+Requirement already satisfied: filelock>=3.10.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (3.32.5)
+Requirement already satisfied: fsspec>=2023.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (2026.6.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.5.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (1.6.0)
+Requirement already satisfied: httpx<1,>=0.23.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (0.28.1)
+Requirement already satisfied: packaging>=20.9 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (26.3)
+Requirement already satisfied: pyyaml>=5.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (6.0.3)
+Requirement already satisfied: tqdm>=4.42.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (4.70.0)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (4.16.0)
+Requirement already satisfied: anyio in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (4.15.1)
+Requirement already satisfied: certifi in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (1.0.9)
+Requirement already satisfied: idna in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (3.19)
+Requirement already satisfied: h11>=0.16 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->huggingface_hub) (0.16.0)
+Requirement already satisfied: numpy>=1.17 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.4.6)
+Requirement already satisfied: pyarrow>=21.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (25.0.1)
+Requirement already satisfied: dill<0.4.2,>=0.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.4.1)
+Requirement already satisfied: pandas in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.0.5)
+Requirement already satisfied: requests>=2.32.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.34.2)
+Requirement already satisfied: xxhash in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.0.1)
+Requirement already satisfied: multiprocess<0.70.20 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.70.19)
+Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (3.14.3)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2.7.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (0.5.2)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.24.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (2.7.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from pandas->datasets) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas->datasets) (1.17.0)
+VANS already exists; skipping clone.
+TwiFF already exists; skipping clone.
+QWEN_DIR=/scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct already exists and is non-empty -- skipping Qwen2.5-VL-3B-Instruct download
+(set FORCE_REDOWNLOAD_MODELS=1 to force).
+SKIP_WAN_DOWNLOAD=1 -- not downloading/checking Wan2.1-T2V-1.3B this run, regardless of
+whether WAN_DIR currently exists. Unset this (or pass SKIP_WAN_DOWNLOAD=0) once Stage 1/2
+actually need it.
+Staging Future-L1-50K (Eurayka/Future-L1-50K) -- Future-L1's own
+visual-gain-filtered subset of TwiFF, converted to TwiFF's column schema...
+loaded Eurayka/Future-L1-50K: 50000 rows, columns=['id', 'video', 'conversations', 'image', 'reasoning_image', 'class', 'answer', 'meta_data', 'correct_in_8_base', 'correct_in_8_hint', 'gain', 'mode']
+Sample converted question (row 0): 'Will the group of people continue walking or start swimming in the water as they move further into it?'
+Sample converted answer   (row 0): 'In frame_1, the group of people is seen standing in shallow water, facing towards the city lights in the background. The lighting suggests it is nighttime, and the calmness of the water indicates a t
+Saved 50000 row(s) (source=future_l1_50k) to /scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full
+VAL_METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_val already exists and is non-empty -- skipping validation
+re-staging (set FORCE_RESTAGE_VAL=1 to force).
+===== Data staging completed successfully =====
+NOTE: train/validation source-video overlap has NOT been checked by this script (removed
+2026-09-15 at explicit request -- it was gating AUTO_CHAIN_DOWNLOADS, which the user wants
+to run before checking, not after). Run check_train_val_overlap.sh yourself once METADATA_DIR
+and VAL_METADATA_DIR are both staged -- it's metadata-only (no clips needed), so it can run
+any time, before or after the downloads finish.
+METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full -- pass this SAME path to download_panda70m_clips.sh /
+screen_panda70m_clip_quality.sh / train_stage0_latent_grounding.sh's own METADATA_DIR overrides.
+Chaining train clip download (METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full, OUTPUT_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips)...
+Submitted batch job 59180
+Chaining validation clip download (METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_val, OUTPUT_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val)...
+Submitted batch job 59181
+Both download jobs submitted with --dependency=afterok:59179 -- they will
+start automatically once this staging job exits successfully. Check 'squeue -u $USER'
+to see them queued (PD, dependency) right now. If THIS job fails, neither download
+job will ever start (afterok only fires on success) -- resubmit data_staging.sh.
+End: Wed Sep 16 02:53:34 PM IST 2026

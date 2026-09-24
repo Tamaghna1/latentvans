@@ -1,0 +1,25 @@
+[18:38:35] W&B logging ON: project=stage0 run=stage0-57903 url=https://wandb.ai/tamaghna-mandal09-indian-institute-of-science/stage0/runs/ipz8em0m
+[18:39:03] ======================================================================
+[18:39:03] Loading Qwen2.5-VL-3B-Instruct (LoRA adapter)
+[18:39:03] ======================================================================
+Loading weights: 100%|██████████| 824/824 [00:00<00:00, 16250.27it/s]
+[18:39:09] added 3 latent-reasoning special tokens; vocab size now 151668
+/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:1377: UserWarning: Model has `tie_word_embeddings=True` and a tied layer is part of the adapter, but `ensure_weight_tying` is not set to True. This can lead to complications, for example when merging the adapter or converting your model to formats other than safetensors. Check the discussion here: https://github.com/huggingface/peft/issues/2777
+  warnings.warn(msg)
+[18:39:09] applied a fresh LoRA config (embed_tokens/lm_head kept fully trainable for the new latent tokens; everything else outside target_modules stays frozen)
+trainable params: 624,918,528 || all params: 4,378,992,640 || trainable%: 14.2708
+[18:39:09] ======================================================================
+[18:39:09] Loading TwiFF-2.7M slice from /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000, video_root=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+[18:39:09] ======================================================================
+[18:39:10] loaded 30 flagged video filename(s) to exclude from /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json
+[18:39:12] quality-screen exclusion: 30 of 2000 TwiFF row(s) reference a flagged clip and will be skipped this run (1970 row(s) remain usable)
+[18:39:12] 1970 row(s) usable for this run (after exclusions, if any)
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+[18:39:15] FATAL: unhandled exception.
+Traceback (most recent call last):
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py", line 781, in <module>
+    main()
+  File "/scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py", line 721, in main
+    loss_latent = F.mse_loss(h_latent.float(), target.unsqueeze(0).expand_as(h_latent).float())
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (2048) must match the existing size (1280) at non-singleton dimension 1.  Target sizes: [4, 2048].  Tensor sizes: [1, 1280]

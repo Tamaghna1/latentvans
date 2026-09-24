@@ -1,0 +1,169 @@
+_wandb:
+    value:
+        cli_version: 0.30.0
+        e:
+            45nj8zfsjwhgx62mgcg70es1przt9ai8:
+                args:
+                    - --qwen_dir
+                    - /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct
+                    - --metadata_dir
+                    - /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000
+                    - --video_root
+                    - /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+                    - --output_dir
+                    - /scratch/users/anirban/tamaghnam/latentvans/checkpoints/stage0_run1
+                    - --dtype
+                    - bf16
+                    - --batch_size
+                    - "1"
+                    - --grad_accum_steps
+                    - "8"
+                    - --max_steps
+                    - "2000"
+                    - --save_every
+                    - "200"
+                    - --exclude_flagged_json
+                    - /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json
+                    - --wandb_project
+                    - stage0
+                codePath: train_stage0_latent_grounding.py
+                codePathLocal: train_stage0_latent_grounding.py
+                cpu_count: 64
+                cpu_count_logical: 64
+                cudaVersion: "12.9"
+                disk:
+                    /:
+                        total: "1967317549056"
+                        used: "204712071168"
+                email: tamaghna.mandal09@gmail.com
+                executable: /scratch/users/anirban/tamaghnam/envs/latentvans/bin/python
+                gpu: NVIDIA RTX 6000 Ada Generation
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Ada
+                      cudaCores: 18176
+                      memoryTotal: "51527024640"
+                      name: NVIDIA RTX 6000 Ada Generation
+                      uuid: GPU-010f5cb9-2c5f-be74-6bd5-f6f24cad2e5f
+                host: cn7.cds.iisc.in
+                memory:
+                    total: "540607815680"
+                os: Linux-6.8.0-124-generic-x86_64-with-glibc2.35
+                program: /scratch/users/anirban/tamaghnam/latentvans/scripts/train_stage0_latent_grounding.py
+                python: CPython 3.11.16
+                root: /scratch/users/anirban/tamaghnam/latentvans/scripts
+                slurm:
+                    cluster_name: mahamathi
+                    conf: /etc/slurm/slurm.conf
+                    cpus_on_node: "8"
+                    cpus_per_task: "8"
+                    gpus_on_node: "1"
+                    gtids: "0"
+                    job_account: research
+                    job_cpus_per_node: "8"
+                    job_gid: "1018"
+                    job_gpus: "3"
+                    job_id: "57910"
+                    job_name: stage0_sft
+                    job_nodelist: cn7
+                    job_num_nodes: "1"
+                    job_partition: ada
+                    job_qos: normal
+                    job_uid: "1229"
+                    job_user: tamaghnam
+                    jobid: "57910"
+                    localid: "0"
+                    mem_per_node: "92160"
+                    nnodes: "1"
+                    node_aliases: (null)
+                    nodeid: "0"
+                    nodelist: cn7
+                    prio_process: "0"
+                    procid: "0"
+                    submit_dir: /scratch/users/anirban/tamaghnam/latentvans/scripts
+                    submit_host: mahamathi2.cds.iisc.in
+                    task_pid: "3375129"
+                    tasks_per_node: "1"
+                    topology_addr: cn7
+                    topology_addr_pattern: node
+                    working_cluster: mahamathi:192.168.2.254:6817:9728:109
+                startedAt: "2026-09-09T13:16:50.245229Z"
+                writerId: 45nj8zfsjwhgx62mgcg70es1przt9ai8
+        m: []
+        python_version: 3.11.16
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+                - 11
+                - 41
+                - 49
+                - 51
+                - 71
+                - 98
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+            "4": 3.11.16
+            "5": 0.30.0
+            "12": 0.30.0
+            "13": linux-x86_64
+batch_size:
+    value: 1
+device:
+    value: auto
+dtype:
+    value: bf16
+exclude_flagged_json:
+    value: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json
+grad_accum_steps:
+    value: 8
+gradient_checkpointing:
+    value: true
+lambda_latent:
+    value: 0.1
+latent_span_len:
+    value: 4
+log_every:
+    value: 10
+lora_alpha:
+    value: 16
+lora_dropout:
+    value: 0.05
+lora_r:
+    value: 8
+lora_target_modules:
+    value: q_proj,k_proj,v_proj,o_proj
+lr:
+    value: 0.0002
+max_answer_chars:
+    value: 1500
+max_steps:
+    value: 2000
+metadata_dir:
+    value: /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000
+output_dir:
+    value: /scratch/users/anirban/tamaghnam/latentvans/checkpoints/stage0_run1
+qwen_dir:
+    value: /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct
+resume_from:
+    value: null
+save_every:
+    value: 200
+seed:
+    value: 0
+use_lora:
+    value: true
+video_root:
+    value: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+wandb_entity:
+    value: null
+wandb_project:
+    value: stage0
+wandb_run_name:
+    value: null
+warmup_steps:
+    value: 50

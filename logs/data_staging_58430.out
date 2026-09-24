@@ -1,0 +1,63 @@
+===== Data Staging: Checkpoints, Repos, TwiFF Metadata =====
+Job ID: 58430
+Node: cn3.cds.iisc.in
+Start: Sat Sep 12 07:10:59 PM IST 2026
+Python: /scratch/users/anirban/tamaghnam/envs/latentvans/bin/python
+Python 3.11.16
+Requirement already satisfied: pip in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (26.2.1)
+Requirement already satisfied: huggingface_hub in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (1.30.0)
+Collecting huggingface_hub
+  Downloading huggingface_hub-1.31.0-py3-none-any.whl.metadata (16 kB)
+Requirement already satisfied: datasets in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (5.0.1)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (8.5.0)
+Requirement already satisfied: filelock>=3.10.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (3.32.5)
+Requirement already satisfied: fsspec>=2023.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (2026.6.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.5.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (1.6.0)
+Requirement already satisfied: httpx<1,>=0.23.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (0.28.1)
+Requirement already satisfied: packaging>=20.9 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (26.3)
+Requirement already satisfied: pyyaml>=5.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (6.0.3)
+Requirement already satisfied: tqdm>=4.42.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (4.70.0)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface_hub) (4.16.0)
+Requirement already satisfied: anyio in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (4.15.1)
+Requirement already satisfied: certifi in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (1.0.9)
+Requirement already satisfied: idna in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1,>=0.23.0->huggingface_hub) (3.19)
+Requirement already satisfied: h11>=0.16 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpcore==1.*->httpx<1,>=0.23.0->huggingface_hub) (0.16.0)
+Requirement already satisfied: numpy>=1.17 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.4.6)
+Requirement already satisfied: pyarrow>=21.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (25.0.1)
+Requirement already satisfied: dill<0.4.2,>=0.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.4.1)
+Requirement already satisfied: pandas in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.0.5)
+Requirement already satisfied: requests>=2.32.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.34.2)
+Requirement already satisfied: xxhash in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.0.1)
+Requirement already satisfied: multiprocess<0.70.20 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.70.19)
+Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (3.14.3)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2.7.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (0.5.2)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.24.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (2.7.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from pandas->datasets) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas->datasets) (1.17.0)
+Downloading huggingface_hub-1.31.0-py3-none-any.whl (798 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 798.3/798.3 kB 11.7 MB/s  0:00:00
+Installing collected packages: huggingface_hub
+  Attempting uninstall: huggingface_hub
+    Found existing installation: huggingface_hub 1.30.0
+    Uninstalling huggingface_hub-1.30.0:
+      Successfully uninstalled huggingface_hub-1.30.0
+Successfully installed huggingface_hub-1.31.0
+VANS already exists; skipping clone.
+TwiFF already exists; skipping clone.
+Downloading Qwen/Qwen2.5-VL-3B-Instruct...
+[32m✓ Downloaded[0m
+  path: /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Qwen2.5-VL-3B-Instruct
+Downloading Wan-AI/Wan2.1-T2V-1.3B...
+[32m✓ Downloaded[0m
+  path: /scratch/users/anirban/tamaghnam/latentvans/checkpoints/Wan2.1-T2V-1.3B
+Streaming the first 2,000 TwiFF rows (train split)...
+Saved 2000 rows to /scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_2000
+Streaming the full official TwiFF-2.7M validation split...

@@ -1,0 +1,3 @@
+[submodule "code/VANS"]
+	path = code/VANS
+	url = https://github.com/KlingAIResearch/VANS.git

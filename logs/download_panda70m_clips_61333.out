@@ -1,0 +1,92 @@
+===== Download Panda-70M Clips (full dataset) =====
+Job ID: 61333
+Node: cn4.cds.iisc.in
+Start: Thu Sep 24 03:39:32 PM IST 2026
+METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full
+OUTPUT_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips
+NUM_SHARDS=1 SHARD_ID=0
+Requirement already satisfied: yt-dlp in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (2026.8.19)
+Requirement already satisfied: datasets in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (5.0.1)
+Requirement already satisfied: filelock in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.32.5)
+Requirement already satisfied: numpy>=1.17 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.4.6)
+Requirement already satisfied: pyarrow>=21.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (25.0.1)
+Requirement already satisfied: dill<0.4.2,>=0.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.4.1)
+Requirement already satisfied: pandas in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (3.0.5)
+Requirement already satisfied: requests>=2.32.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (2.34.2)
+Requirement already satisfied: httpx<1.0.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.28.1)
+Requirement already satisfied: tqdm>=4.66.3 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.70.0)
+Requirement already satisfied: xxhash in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (4.0.1)
+Requirement already satisfied: multiprocess<0.70.20 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (0.70.19)
+Requirement already satisfied: fsspec<=2026.6.0,>=2023.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2026.6.0)
+Requirement already satisfied: huggingface-hub<2.0,>=0.25.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (1.31.0)
+Requirement already satisfied: packaging in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (26.3)
+Requirement already satisfied: pyyaml>=5.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from datasets) (6.0.3)
+Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (3.14.3)
+Requirement already satisfied: anyio in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (4.15.1)
+Requirement already satisfied: certifi in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (1.0.9)
+Requirement already satisfied: idna in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpx<1.0.0->datasets) (3.19)
+Requirement already satisfied: h11>=0.16 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from httpcore==1.*->httpx<1.0.0->datasets) (0.16.0)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (8.5.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.5.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (1.6.0)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets) (4.16.0)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (2.7.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.8.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (6.7.1)
+Requirement already satisfied: propcache>=0.2.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (0.5.2)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2026.6.0,>=2023.1.0->datasets) (1.24.5)
+Requirement already satisfied: charset_normalizer<4,>=2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from requests>=2.32.2->datasets) (2.7.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from pandas->datasets) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from python-dateutil>=2.8.2->pandas->datasets) (1.17.0)
+[15:40:03] ======================================================================
+[15:40:03] Loading all TwiFF targets from /scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full
+[15:40:03] ======================================================================
+[15:40:30] 50000 distinct clip files targeted for this run (start/end taken directly from each row's own meta_data)
+[15:40:30] 49222 distinct source YouTube videos among those targets
+[15:40:30] ======================================================================
+[15:40:30] Downloading + cutting clips (grouped by source video)
+[15:40:30] ======================================================================
+[15:40:30]   [video 23/49222] yt-dlp d0OTlucki00 (1 clip(s) needed) ...
+[15:40:35]     FAILED: ERROR: [youtube] d0OTlucki00: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:40:35]   [video 24/49222] yt-dlp jew1458EF5I (1 clip(s) needed) ...
+[15:40:39]     FAILED: ERROR: [youtube] jew1458EF5I: This video is not available
+[15:40:40]   [video 68/49222] yt-dlp zSfsNZzKZss (1 clip(s) needed) ...
+[15:40:45]     FAILED: ERROR: [youtube] zSfsNZzKZss: This video is not available
+[15:40:45]   [video 70/49222] yt-dlp 203x3L2HYAY (1 clip(s) needed) ...
+[15:40:49]     FAILED: ERROR: [youtube] 203x3L2HYAY: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:40:50]   [video 80/49222] yt-dlp 2KUpTltWbfQ (2 clip(s) needed) ...
+[15:40:54]     FAILED: ERROR: [youtube] 2KUpTltWbfQ: This video is not available
+[15:40:54]   [video 85/49222] yt-dlp wZcNfq_Vdnk (1 clip(s) needed) ...
+[15:40:58]     FAILED: ERROR: [youtube] wZcNfq_Vdnk: This video is unavailable
+[15:40:58]   [video 89/49222] yt-dlp i8WVyvIK-14 (1 clip(s) needed) ...
+[15:41:03]     FAILED: ERROR: [youtube] i8WVyvIK-14: This video is not available
+[15:41:03]   [video 116/49222] yt-dlp fyhI4GPgEUM (2 clip(s) needed) ...
+[15:41:07]     FAILED: ERROR: [youtube] fyhI4GPgEUM: This video is not available
+[15:41:07]   [video 122/49222] yt-dlp kYxys6pXwwc (1 clip(s) needed) ...
+[15:41:11]     FAILED: ERROR: [youtube] kYxys6pXwwc: This video is not available
+[15:41:11]   [video 126/49222] yt-dlp vMeC-ibV8Ok (1 clip(s) needed) ...
+[15:41:16]     FAILED: ERROR: [youtube] vMeC-ibV8Ok: This video is not available
+[15:41:16]   [video 153/49222] yt-dlp BQAImwhnmx8 (1 clip(s) needed) ...
+[15:41:20]     FAILED: ERROR: [youtube] BQAImwhnmx8: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:20]   [video 174/49222] yt-dlp kIetDoO86HU (1 clip(s) needed) ...
+[15:41:24]     FAILED: ERROR: [youtube] kIetDoO86HU: This video is unavailable
+[15:41:24]   [video 203/49222] yt-dlp qyElIIlKrlg (1 clip(s) needed) ...
+[15:41:29]     FAILED: ERROR: [youtube] qyElIIlKrlg: This video is not available
+[15:41:30]   [video 240/49222] yt-dlp z92kV3NKEsw (1 clip(s) needed) ...
+[15:41:34]     FAILED: ERROR: [youtube] z92kV3NKEsw: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:34]   [video 283/49222] yt-dlp ttcAGQKdKvs (1 clip(s) needed) ...
+[15:41:39]     FAILED: ERROR: [youtube] ttcAGQKdKvs: This video is not available
+[15:41:39]   [video 293/49222] yt-dlp QCWkZ3yTAzk (1 clip(s) needed) ...
+[15:41:44]     FAILED: ERROR: [youtube] QCWkZ3yTAzk: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:44]   [video 300/49222] yt-dlp 8WkVNq1-6bs (1 clip(s) needed) ...
+[15:41:47]     FAILED: ERROR: [youtube] 8WkVNq1-6bs: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:47]   [video 309/49222] yt-dlp un1PJ7U_ASA (1 clip(s) needed) ...
+[15:41:52]     FAILED: ERROR: [youtube] un1PJ7U_ASA: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:52]   [video 342/49222] yt-dlp YsKBaaxbwTU (1 clip(s) needed) ...
+[15:41:56]     FAILED: ERROR: [youtube] YsKBaaxbwTU: Please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+[15:41:56]   [video 343/49222] yt-dlp JQaBsXPSAEs (1 clip(s) needed) ...
+[15:41:59]     FAILED: ERROR: [youtube] JQaBsXPSAEs: This video is unavailable
+[15:41:59]   [video 346/49222] yt-dlp AckdrrEUpqw (1 clip(s) needed) ...

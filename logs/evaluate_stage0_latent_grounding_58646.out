@@ -1,0 +1,39 @@
+===== Stage 0 -- Validation-Only Evaluation =====
+Job ID: 58646
+Node: cn7.cds.iisc.in
+Start: Sun Sep 13 06:49:46 PM IST 2026
+CHECKPOINT_ROOT=/scratch/users/anirban/tamaghnam/latentvans/checkpoints/stage0_run1
+VAL_METADATA_DIR=/scratch/users/anirban/tamaghnam/latentvans/data/twiff_metadata_val
+VAL_VIDEO_ROOT=/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val
+EVAL_MAX_EXAMPLES=200
+Sun Sep 13 18:49:46 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 575.64.03              Driver Version: 575.64.03      CUDA Version: 12.9     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA RTX 6000 Ada Gene...    Off |   00000000:16:00.0 Off |                  Off |
+| 30%   29C    P8             18W /  300W |       2MiB /  49140MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Requirement already satisfied: matplotlib in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (3.11.2)
+Requirement already satisfied: contourpy>=1.0.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (0.12.1)
+Requirement already satisfied: fonttools>=4.28.2 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (4.65.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (1.5.1)
+Requirement already satisfied: numpy>=1.25 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (2.4.6)
+Requirement already satisfied: packaging>=20.0 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (26.3)
+Requirement already satisfied: pillow>=9 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (12.3.0)
+Requirement already satisfied: pyparsing>=3 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (3.3.2)
+Requirement already satisfied: python-dateutil>=2.7 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from matplotlib) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib) (1.17.0)

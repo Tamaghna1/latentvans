@@ -1,0 +1,17 @@
+WARNING: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips/quality_screen_flagged.json not found -- proceeding WITHOUT quality-screen exclusion.
+(Run screen_panda70m_clip_quality.sh first if you want the flagged clips excluded.)
+WARNING: /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips_val/quality_screen_flagged.json not found -- proceeding WITHOUT validation quality-screen exclusion.
+WARNING: VAL_FRAMES_ROOT (/scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames_val) not found -- validation stream will live-decode raw video from $VAL_VIDEO_ROOT.
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/anirban/tamaghnam/.netrc.
+wandb: Currently logged in as: tamaghna-mandal09 (tamaghna-mandal09-indian-institute-of-science) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run vlsp6fh1
+wandb: Tracking run with wandb version 0.30.0
+wandb: Run data is saved locally in /scratch/users/anirban/tamaghnam/latentvans/scripts/wandb/run-20260924_175210-vlsp6fh1
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run stage0-61365
+wandb: ⭐️ View project at https://wandb.ai/tamaghna-mandal09-indian-institute-of-science/latentvans-stage0
+wandb: 🚀 View run at https://wandb.ai/tamaghna-mandal09-indian-institute-of-science/latentvans-stage0/runs/vlsp6fh1
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:  35%|███▌      | 290/824 [00:00<00:00, 2869.50it/s]Loading weights:  70%|███████   | 577/824 [00:00<00:00, 1513.79it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 2020.12it/s]
+/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:1463: UserWarning: Model has `tie_word_embeddings=True` and a tied layer is part of the adapter, but `ensure_weight_tying` is not set to True. This can lead to complications, for example when merging the adapter or converting your model to formats other than safetensors. Check the discussion here: https://github.com/huggingface/peft/issues/2777
+  warnings.warn(msg)
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.

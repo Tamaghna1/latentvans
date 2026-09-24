@@ -1,0 +1,97 @@
+[90mHint: The `hf-cli` skill is not installed. Run `hf skills add -g --claude` to teach your AI agents how to use the `hf` CLI.[0m
+Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]Fetching 14 files:   7%|▋         | 1/14 [00:00<00:01,  9.19it/s]Fetching 14 files: 100%|██████████| 14/14 [00:00<00:00, 87.97it/s]
+Fetching 22 files:   0%|          | 0/22 [00:00<?, ?it/s]Fetching 22 files:  68%|██████▊   | 15/22 [00:00<00:00, 144.58it/s]Fetching 22 files: 100%|██████████| 22/22 [00:00<00:00, 121.23it/s]
+Saving the dataset (0/1 shards):   0%|          | 0/2000 [00:00<?, ? examples/s]Saving the dataset (1/1 shards): 100%|██████████| 2000/2000 [00:00<00:00, 28991.62 examples/s]Saving the dataset (1/1 shards): 100%|██████████| 2000/2000 [00:00<00:00, 28922.25 examples/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Generating train split:   0%|          | 0/2708318 [00:00<?, ? examples/s]Generating train split:   0%|          | 1000/2708318 [00:00<07:17, 6182.56 examples/s]Generating train split:   1%|          | 19000/2708318 [00:00<00:30, 86844.72 examples/s]Generating train split:   1%|▏         | 40000/2708318 [00:00<00:20, 132546.89 examples/s]Generating train split:   2%|▏         | 58000/2708318 [00:00<00:21, 123738.92 examples/s]Generating train split:   3%|▎         | 78000/2708318 [00:00<00:18, 144666.22 examples/s]Generating train split:   4%|▎         | 96000/2708318 [00:00<00:19, 134366.70 examples/s]Generating train split:   4%|▍         | 117000/2708318 [00:00<00:17, 151872.10 examples/s]Generating train split:   5%|▌         | 138000/2708318 [00:00<00:15, 164867.92 examples/s]Generating train split:   6%|▌         | 163000/2708318 [00:01<00:17, 145799.61 examples/s]Generating train split:   7%|▋         | 184000/2708318 [00:01<00:15, 159139.15 examples/s]Generating train split:   7%|▋         | 202000/2708318 [00:01<00:17, 142467.71 examples/s]Generating train split:   8%|▊         | 222000/2708318 [00:01<00:16, 154163.28 examples/s]Generating train split:   9%|▉         | 240000/2708318 [00:01<00:17, 138602.68 examples/s]Generating train split:  10%|▉         | 261000/2708318 [00:01<00:15, 153808.25 examples/s]Generating train split:  10%|█         | 281000/2708318 [00:01<00:14, 163433.45 examples/s]Generating train split:  11%|█▏        | 308000/2708318 [00:02<00:16, 146956.28 examples/s]Generating train split:  12%|█▏        | 328000/2708318 [00:02<00:15, 157301.29 examples/s]Generating train split:  13%|█▎        | 364000/2708318 [00:03<00:35, 65436.89 examples/s] Generating train split:  15%|█▍        | 401000/2708318 [00:03<00:26, 86408.18 examples/s]Generating train split:  16%|█▌        | 420000/2708318 [00:03<00:23, 97666.02 examples/s]Generating train split:  16%|█▌        | 440000/2708318 [00:03<00:20, 111154.26 examples/s]Generating train split:  17%|█▋        | 458000/2708318 [00:03<00:20, 111168.92 examples/s]Generating train split:  18%|█▊        | 478000/2708318 [00:03<00:17, 125837.25 examples/s]Generating train split:  18%|█▊        | 496000/2708318 [00:04<00:18, 119999.49 examples/s]Generating train split:  19%|█▉        | 514000/2708318 [00:04<00:16, 131702.00 examples/s]Generating train split:  20%|█▉        | 535000/2708318 [00:04<00:14, 148345.19 examples/s]Generating train split:  20%|██        | 553000/2708318 [00:04<00:16, 134704.80 examples/s]Generating train split:  21%|██        | 574000/2708318 [00:04<00:14, 149206.80 examples/s]Generating train split:  22%|██▏       | 592000/2708318 [00:04<00:15, 138124.92 examples/s]Generating train split:  23%|██▎       | 611000/2708318 [00:04<00:14, 149050.95 examples/s]Generating train split:  23%|██▎       | 631000/2708318 [00:04<00:13, 159666.48 examples/s]Generating train split:  24%|██▍       | 650000/2708318 [00:05<00:14, 142568.01 examples/s]Generating train split:  25%|██▍       | 670000/2708318 [00:05<00:13, 154020.96 examples/s]Generating train split:  26%|██▌       | 699000/2708318 [00:05<00:28, 70642.51 examples/s] Generating train split:  27%|██▋       | 724000/2708318 [00:06<00:21, 91704.22 examples/s]Generating train split:  28%|██▊       | 746000/2708318 [00:06<00:20, 97363.60 examples/s]Generating train split:  28%|██▊       | 765000/2708318 [00:06<00:17, 110800.16 examples/s]Generating train split:  29%|██▉       | 785000/2708318 [00:06<00:15, 120571.86 examples/s]Generating train split:  30%|██▉       | 801000/2708318 [00:06<00:18, 104007.10 examples/s]Generating train split:  30%|███       | 822000/2708318 [00:06<00:15, 122305.43 examples/s]Generating train split:  31%|███       | 842000/2708318 [00:06<00:13, 137444.56 examples/s]Generating train split:  32%|███▏      | 868000/2708318 [00:07<00:13, 134796.18 examples/s]Generating train split:  33%|███▎      | 888000/2708318 [00:07<00:12, 147091.13 examples/s]Generating train split:  33%|███▎      | 905000/2708318 [00:07<00:13, 134732.62 examples/s]Generating train split:  34%|███▍      | 924000/2708318 [00:07<00:12, 145996.43 examples/s]Generating train split:  35%|███▍      | 944000/2708318 [00:07<00:12, 138565.13 examples/s]Generating train split:  36%|███▌      | 963000/2708318 [00:07<00:11, 149562.72 examples/s]Generating train split:  36%|███▋      | 983000/2708318 [00:07<00:10, 160242.67 examples/s]Generating train split:  37%|███▋      | 1003000/2708318 [00:08<00:11, 143891.36 examples/s]Generating train split:  38%|███▊      | 1022000/2708318 [00:08<00:26, 64248.92 examples/s] Generating train split:  39%|███▉      | 1069000/2708318 [00:08<00:14, 113649.76 examples/s]Generating train split:  41%|████      | 1099000/2708318 [00:09<00:13, 120615.59 examples/s]Generating train split:  41%|████▏     | 1119000/2708318 [00:09<00:12, 131911.54 examples/s]Generating train split:  42%|████▏     | 1147000/2708318 [00:09<00:11, 130617.70 examples/s]Generating train split:  43%|████▎     | 1167000/2708318 [00:09<00:10, 141738.89 examples/s]Generating train split:  44%|████▍     | 1185000/2708318 [00:09<00:10, 144344.92 examples/s]Generating train split:  45%|████▍     | 1211000/2708318 [00:09<00:12, 124242.60 examples/s]Generating train split:  45%|████▌     | 1232000/2708318 [00:09<00:10, 138266.60 examples/s]Generating train split:  46%|████▋     | 1258000/2708318 [00:10<00:10, 135907.73 examples/s]Generating train split:  47%|████▋     | 1277000/2708318 [00:10<00:09, 145759.75 examples/s]Generating train split:  48%|████▊     | 1296000/2708318 [00:10<00:10, 137756.56 examples/s]Generating train split:  49%|████▊     | 1316000/2708318 [00:10<00:09, 148150.27 examples/s]Generating train split:  49%|████▉     | 1337000/2708318 [00:10<00:08, 160063.79 examples/s]Generating train split:  50%|█████     | 1362000/2708318 [00:11<00:20, 67296.06 examples/s] Generating train split:  52%|█████▏    | 1407000/2708318 [00:11<00:11, 111140.99 examples/s]Generating train split:  53%|█████▎    | 1439000/2708318 [00:11<00:09, 130061.40 examples/s]Generating train split:  54%|█████▍    | 1470000/2708318 [00:11<00:09, 130889.79 examples/s]Generating train split:  55%|█████▌    | 1498000/2708318 [00:12<00:09, 130174.49 examples/s]Generating train split:  56%|█████▌    | 1519000/2708318 [00:12<00:08, 141234.07 examples/s]Generating train split:  57%|█████▋    | 1545000/2708318 [00:12<00:08, 136986.96 examples/s]Generating train split:  58%|█████▊    | 1566000/2708318 [00:12<00:07, 149540.84 examples/s]Generating train split:  59%|█████▊    | 1585000/2708318 [00:12<00:07, 154727.69 examples/s]Generating train split:  59%|█████▉    | 1610000/2708318 [00:12<00:08, 127586.34 examples/s]Generating train split:  60%|██████    | 1631000/2708318 [00:13<00:07, 141904.57 examples/s]Generating train split:  61%|██████    | 1648000/2708318 [00:13<00:07, 136764.18 examples/s]Generating train split:  62%|██████▏   | 1666000/2708318 [00:13<00:07, 144491.03 examples/s]Generating train split:  62%|██████▏   | 1686000/2708318 [00:13<00:06, 156027.37 examples/s]Generating train split:  64%|██████▍   | 1727000/2708318 [00:14<00:12, 79963.46 examples/s] Generating train split:  66%|██████▌   | 1787000/2708318 [00:14<00:06, 139365.69 examples/s]Generating train split:  67%|██████▋   | 1823000/2708318 [00:14<00:06, 142436.23 examples/s]Generating train split:  68%|██████▊   | 1851000/2708318 [00:14<00:06, 139336.58 examples/s]Generating train split:  69%|██████▉   | 1872000/2708318 [00:14<00:05, 148509.88 examples/s]Generating train split:  70%|███████   | 1899000/2708318 [00:15<00:05, 144944.64 examples/s]Generating train split:  71%|███████   | 1919000/2708318 [00:15<00:05, 153298.35 examples/s]Generating train split:  72%|███████▏  | 1946000/2708318 [00:15<00:05, 145125.57 examples/s]Generating train split:  73%|███████▎  | 1966000/2708318 [00:15<00:04, 153303.58 examples/s]Generating train split:  73%|███████▎  | 1985000/2708318 [00:15<00:04, 153747.20 examples/s]Generating train split:  74%|███████▍  | 2011000/2708318 [00:15<00:05, 129007.38 examples/s]Generating train split:  75%|███████▌  | 2032000/2708318 [00:15<00:04, 143714.30 examples/s]Generating train split:  76%|███████▋  | 2067000/2708318 [00:16<00:07, 80741.24 examples/s] Generating train split:  77%|███████▋  | 2087000/2708318 [00:16<00:06, 94082.56 examples/s]Generating train split:  78%|███████▊  | 2106000/2708318 [00:16<00:06, 98204.93 examples/s]Generating train split:  78%|███████▊  | 2126000/2708318 [00:17<00:05, 112298.31 examples/s]Generating train split:  79%|███████▉  | 2144000/2708318 [00:17<00:05, 112544.78 examples/s]Generating train split:  80%|███████▉  | 2164000/2708318 [00:17<00:04, 127703.34 examples/s]Generating train split:  81%|████████  | 2184000/2708318 [00:17<00:03, 142598.52 examples/s]Generating train split:  81%|████████▏ | 2201000/2708318 [00:17<00:03, 129965.64 examples/s]Generating train split:  82%|████████▏ | 2221000/2708318 [00:17<00:03, 143198.21 examples/s]Generating train split:  83%|████████▎ | 2240000/2708318 [00:17<00:03, 132779.44 examples/s]Generating train split:  83%|████████▎ | 2260000/2708318 [00:17<00:03, 145566.37 examples/s]Generating train split:  84%|████████▍ | 2281000/2708318 [00:18<00:02, 159812.78 examples/s]Generating train split:  85%|████████▌ | 2308000/2708318 [00:18<00:02, 146598.76 examples/s]Generating train split:  86%|████████▌ | 2328000/2708318 [00:18<00:02, 156459.48 examples/s]Generating train split:  87%|████████▋ | 2345000/2708318 [00:18<00:02, 139225.74 examples/s]Generating train split:  87%|████████▋ | 2365000/2708318 [00:18<00:02, 151749.38 examples/s]Generating train split:  88%|████████▊ | 2382000/2708318 [00:19<00:06, 52558.38 examples/s] Generating train split:  89%|████████▊ | 2401000/2708318 [00:19<00:04, 62999.91 examples/s]Generating train split:  89%|████████▉ | 2421000/2708318 [00:19<00:03, 79275.62 examples/s]Generating train split:  90%|█████████ | 2441000/2708318 [00:19<00:02, 96882.86 examples/s]Generating train split:  91%|█████████ | 2458000/2708318 [00:20<00:02, 100163.36 examples/s]Generating train split:  92%|█████████▏| 2479000/2708318 [00:20<00:01, 119400.50 examples/s]Generating train split:  92%|█████████▏| 2496000/2708318 [00:20<00:01, 118825.59 examples/s]Generating train split:  93%|█████████▎| 2516000/2708318 [00:20<00:01, 134720.16 examples/s]Generating train split:  94%|█████████▎| 2536000/2708318 [00:20<00:01, 148267.75 examples/s]Generating train split:  94%|█████████▍| 2554000/2708318 [00:20<00:01, 139951.93 examples/s]Generating train split:  95%|█████████▌| 2573000/2708318 [00:20<00:00, 150489.10 examples/s]Generating train split:  96%|█████████▌| 2592000/2708318 [00:20<00:00, 137597.49 examples/s]Generating train split:  96%|█████████▋| 2611000/2708318 [00:21<00:00, 149617.90 examples/s]Generating train split:  97%|█████████▋| 2631000/2708318 [00:21<00:00, 161010.08 examples/s]Generating train split:  98%|█████████▊| 2649000/2708318 [00:21<00:00, 143242.46 examples/s]Generating train split:  99%|█████████▊| 2669000/2708318 [00:21<00:00, 155258.84 examples/s]Generating train split:  99%|█████████▉| 2688000/2708318 [00:21<00:00, 153599.41 examples/s]Generating train split: 100%|█████████▉| 2708000/2708318 [00:21<00:00, 163196.55 examples/s]Generating train split: 100%|██████████| 2708318/2708318 [00:22<00:00, 121563.47 examples/s]
+Generating validation split:   0%|          | 0/1447 [00:00<?, ? examples/s]Failed to read file '/home/anirban/tamaghnam/.cache/huggingface/hub/datasets--Liu-Junhua--TwiFF-2.7M/snapshots/395ddbeceb4ce2450e5d4b71fe3be53cbf5335ae/val-00000-of-00005.parquet' with error CastError: Couldn't cast
+video: string
+question: string
+answer: string
+question_images: list<element: struct<bytes: binary, path: string>>
+  child 0, element: struct<bytes: binary, path: string>
+      child 0, bytes: binary
+      child 1, path: string
+reasoning_images: list<element: struct<bytes: binary, path: string>>
+  child 0, element: struct<bytes: binary, path: string>
+      child 0, bytes: binary
+      child 1, path: string
+question_images_index: list<element: int64>
+  child 0, element: int64
+reasoning_images_index: list<element: int64>
+  child 0, element: int64
+meta_data: struct<start: string, end: string, matching_score: float, max_magnitude: float, mean_magnitude: floa (... 60 chars omitted)
+  child 0, start: string
+  child 1, end: string
+  child 2, matching_score: float
+  child 3, max_magnitude: float
+  child 4, mean_magnitude: float
+  child 5, classification: string
+  child 6, Process: string
+  child 7, Summary: string
+-- schema metadata --
+huggingface: '{"info": {"features": {"video": {"dtype": "string", "_type"' + 894
+to
+{'video': Value('string'), 'question': Value('string'), 'answer': Value('string'), 'question_images_index': List(Value('int64')), 'reasoning_images_index': List(Value('int64')), 'meta_data': {'Process': Value('string'), 'Summary': Value('string'), 'classification': Value('string'), 'end': Value('string'), 'matching_score': Value('float64'), 'max_magnitude': Value('float64'), 'mean_magnitude': Value('float64'), 'start': Value('string')}}
+because column names don't match
+Generating validation split:   0%|          | 0/1447 [00:00<?, ? examples/s]Generating validation split:   0%|          | 0/1447 [00:00<?, ? examples/s]
+Traceback (most recent call last):
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/builder.py", line 1827, in _prepare_split_single
+    for key, table in generator:
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/packaged_modules/parquet/parquet.py", line 220, in _generate_tables
+    yield Key(file_idx, batch_idx), self._cast_table(pa_table)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/packaged_modules/parquet/parquet.py", line 156, in _cast_table
+    pa_table = table_cast(pa_table, self.info.features.arrow_schema)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/table.py", line 2378, in table_cast
+    return cast_table_to_schema(table, schema)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/table.py", line 2306, in cast_table_to_schema
+    raise CastError(
+datasets.table.CastError: Couldn't cast
+video: string
+question: string
+answer: string
+question_images: list<element: struct<bytes: binary, path: string>>
+  child 0, element: struct<bytes: binary, path: string>
+      child 0, bytes: binary
+      child 1, path: string
+reasoning_images: list<element: struct<bytes: binary, path: string>>
+  child 0, element: struct<bytes: binary, path: string>
+      child 0, bytes: binary
+      child 1, path: string
+question_images_index: list<element: int64>
+  child 0, element: int64
+reasoning_images_index: list<element: int64>
+  child 0, element: int64
+meta_data: struct<start: string, end: string, matching_score: float, max_magnitude: float, mean_magnitude: floa (... 60 chars omitted)
+  child 0, start: string
+  child 1, end: string
+  child 2, matching_score: float
+  child 3, max_magnitude: float
+  child 4, mean_magnitude: float
+  child 5, classification: string
+  child 6, Process: string
+  child 7, Summary: string
+-- schema metadata --
+huggingface: '{"info": {"features": {"video": {"dtype": "string", "_type"' + 894
+to
+{'video': Value('string'), 'question': Value('string'), 'answer': Value('string'), 'question_images_index': List(Value('int64')), 'reasoning_images_index': List(Value('int64')), 'meta_data': {'Process': Value('string'), 'Summary': Value('string'), 'classification': Value('string'), 'end': Value('string'), 'matching_score': Value('float64'), 'max_magnitude': Value('float64'), 'mean_magnitude': Value('float64'), 'start': Value('string')}}
+because column names don't match
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/load.py", line 1716, in load_dataset
+    builder_instance.download_and_prepare(
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/builder.py", line 901, in download_and_prepare
+    self._download_and_prepare(
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/builder.py", line 962, in _download_and_prepare
+    self._prepare_split(split_generator, **prepare_split_kwargs)
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/builder.py", line 1694, in _prepare_split
+    for job_id, done, content in self._prepare_split_single(
+  File "/scratch/users/anirban/tamaghnam/envs/latentvans/lib/python3.11/site-packages/datasets/builder.py", line 1880, in _prepare_split_single
+    raise DatasetGenerationError("An error occurred while generating the dataset") from e
+datasets.exceptions.DatasetGenerationError: An error occurred while generating the dataset

@@ -1,14 +1,16 @@
-# large / regenerable
-data/
+# Too large for GitHub (100 MB/file limit): videos, frames, model checkpoints
+data/*
+!data/broken_and_missing_clips.txt
+!data/future_l1_50k_metadata_full/
+!data/twiff_metadata_2000/
+!data/twiff_metadata_val/
 checkpoints/
 envs/
-logs/
-**/wandb/
 __pycache__/
 *.pyc
-# upstream clones (see README): re-clone instead of vendoring
-code/
-# secrets
+# empty/broken upstream clone
+code/TwiFF/
+# secrets: never commit
 cookies.txt
 *.netrc
 .env
