@@ -1,0 +1,14 @@
+# large / regenerable
+data/
+checkpoints/
+envs/
+logs/
+**/wandb/
+__pycache__/
+*.pyc
+# upstream clones (see README): re-clone instead of vendoring
+code/
+# secrets
+cookies.txt
+*.netrc
+.env
