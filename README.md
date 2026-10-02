@@ -58,6 +58,11 @@ sbatch train_stage0_latent_grounding.sh                           # v2 config, s
 CHECKPOINT=$SCRATCH/checkpoints/<run>/step_<N> sbatch diagnose_stage0_grounding.sh
 ```
 
+Each job gets its own tmux session that follows its log: submit with
+`bash tmux_job.sh <name> [VAR=value ...] sbatch [options] <script.sh>`, or attach a session to a running job
+with `bash tmux_job.sh --attach <name> <jobid>`. Sessions are named `<name>_<jobid>` and have windows for
+`log`, `err` and `status`.
+
 `stage0_targets.py` defines the target options (`--target_layout pooled|quadrants`, `--target_delta`,
 `--target_stats`). Training also takes `--latent_head linear`. CE no longer supervises the
 `<|latent_pad|>` positions. Each checkpoint saves `stage0_target_config.json`, which the eval and
