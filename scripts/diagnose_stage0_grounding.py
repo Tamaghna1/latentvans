@@ -34,6 +34,7 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stage0_targets import compute_target, expand_to_slots, load_target_stats  # noqa: E402
+from wandb_util import flatten, log_summary  # noqa: E402
 from train_stage0_latent_grounding import (  # noqa: E402
     QWEN_HIDDEN_SIZE,
     TwiFFStage0Stream,
@@ -61,6 +62,8 @@ def parse_args():
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--output_json", required=True)
+    p.add_argument("--wandb_project", default=None, help="Log the result to this W&B project (optional)")
+    p.add_argument("--wandb_run_name", default=None)
     return p.parse_args()
 
 
@@ -209,10 +212,15 @@ def main():
         f"vs copy-context {baselines.get('ctx_copy', float('nan')):.4f}  (R^2 vs val mean = {r2_vs_const_val:.3f})")
     log(f"retrieval top1 {ret['top1']:.3f} (chance {ret['chance_top1']:.3f}), "
         f"mean rank {ret['mean_rank']:.1f} (chance {ret['chance_mean_rank']:.1f})")
-    if model_mse >= 0.95 * baselines["const_train"] or ret["top1"] < 3 * ret["chance_top1"]:
+    grounded = not (model_mse >= 0.95 * baselines["const_train"] or ret["top1"] < 3 * ret["chance_top1"])
+    if not grounded:
         log("VERDICT: close to the average-target baseline -- Stage 0 is NOT grounding individual clips.")
     else:
         log("VERDICT: beats the average-target baseline and retrieves its own target -- per-clip grounding is real.")
+    ckpt = os.path.normpath(args.checkpoint)
+    log_summary(args.wandb_project,
+                args.wandb_run_name or f"diagnose-{os.path.basename(os.path.dirname(ckpt))}-{os.path.basename(ckpt)}",
+                {**vars(args), **cfg}, {**flatten(result), "grounded": int(grounded)}, job_type="diagnose")
 
 
 if __name__ == "__main__":

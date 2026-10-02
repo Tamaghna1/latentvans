@@ -23,6 +23,7 @@ CHECKPOINT="${CHECKPOINT:-$SCRATCH/checkpoints/stage0_futurel150k_run1/step_2400
 N_TRAIN="${N_TRAIN:-500}"
 N_VAL="${N_VAL:-300}"
 OUTPUT_JSON="${OUTPUT_JSON:-$CHECKPOINT/diagnostics/grounding.json}"
+WANDB_PROJECT="${WANDB_PROJECT:-latentvans-stage0}"   # blank = no W&B logging
 
 echo "Job ID: ${SLURM_JOB_ID:-none}  Node: $(hostname)  Start: $(date)"
 echo "CHECKPOINT=$CHECKPOINT"
@@ -43,6 +44,7 @@ python "$SCRATCH/scripts/diagnose_stage0_grounding.py" \
     --val_video_root "$SCRATCH/data/panda70m_clips_val" \
     --val_frames_root "$SCRATCH/data/panda70m_frames_val_v2" \
     --n_train "$N_TRAIN" --n_val "$N_VAL" \
-    --output_json "$OUTPUT_JSON"
+    --output_json "$OUTPUT_JSON" \
+    ${WANDB_PROJECT:+--wandb_project "$WANDB_PROJECT"}
 
 echo "Done: $(date)"

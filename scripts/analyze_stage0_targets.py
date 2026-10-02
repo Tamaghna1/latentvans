@@ -33,6 +33,7 @@ import torch
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from stage0_targets import frames_features  # noqa: E402
 from train_stage0_latent_grounding import TwiFFStage0Stream, dtype_from_str, get_vision_tower, log  # noqa: E402
+from wandb_util import flatten, log_summary  # noqa: E402
 
 LAYOUTS = ("pooled", "quadrants")
 
@@ -52,6 +53,8 @@ def parse_args():
     p.add_argument("--dtype", choices=["bf16", "fp16", "fp32"], default="bf16")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--output_dir", required=True)
+    p.add_argument("--wandb_project", default=None, help="Log the variant table to this W&B project (optional)")
+    p.add_argument("--wandb_run_name", default=None)
     return p.parse_args()
 
 
@@ -143,6 +146,11 @@ def main():
     with open(os.path.join(args.output_dir, "target_analysis.json"), "w") as f:
         json.dump(results, f, indent=2)
     log(json.dumps(results, indent=2))
+    cols = ["variant", "cos_future_context", "ctx_copy_retrieval_top1", "zero_mse", "ctx_copy_mse",
+            "ridge_r2", "ridge_best_lambda"]
+    rows = [[name] + [r.get(c) for c in cols[1:]] for name, r in results["variants"].items()]
+    log_summary(args.wandb_project, args.wandb_run_name, vars(args), flatten(results),
+                tables={"target_variants": (cols, rows)}, job_type="analyze-targets")
 
 
 if __name__ == "__main__":

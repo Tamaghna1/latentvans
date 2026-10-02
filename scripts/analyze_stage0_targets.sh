@@ -21,6 +21,7 @@ ENV="/scratch/users/anirban/tamaghnam/envs/latentvans"
 N_TRAIN="${N_TRAIN:-3000}"
 N_VAL="${N_VAL:-500}"
 OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/data/stage0_targets_v2}"
+WANDB_PROJECT="${WANDB_PROJECT:-latentvans-stage0}"   # blank = no W&B logging
 
 echo "Job ID: ${SLURM_JOB_ID:-none}  Node: $(hostname)  Start: $(date)"
 nvidia-smi || true
@@ -38,6 +39,7 @@ python "$SCRATCH/scripts/analyze_stage0_targets.py" \
     --val_video_root "$SCRATCH/data/panda70m_clips_val" \
     --val_frames_root "$SCRATCH/data/panda70m_frames_val_v2" \
     --n_train "$N_TRAIN" --n_val "$N_VAL" \
-    --output_dir "$OUTPUT_DIR"
+    --output_dir "$OUTPUT_DIR" \
+    ${WANDB_PROJECT:+--wandb_project "$WANDB_PROJECT"}
 
 echo "Done: $(date)"

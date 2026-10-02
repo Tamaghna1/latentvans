@@ -191,13 +191,13 @@ QWEN_DIR="$SCRATCH/checkpoints/Qwen2.5-VL-3B-Instruct"
 METADATA_DIR="$SCRATCH/data/future_l1_50k_metadata_full"          # CORRECTED 2026-09-24 -- was twiff_metadata_2000, see comment block above
 VIDEO_ROOT="$SCRATCH/data/panda70m_clips"
 EXCLUDE_FLAGGED_JSON="$VIDEO_ROOT/quality_screen_flagged.json"   # from screen_panda70m_clip_quality.py -- NOT yet run against Future-L1-50K (see decision log, 2026-09-23 entry, "quality screen explicitly skipped"); this file won't exist, so EXCLUDE_ARGS below will be empty and a WARNING will print -- that's expected, not a bug
-OUTPUT_DIR="$SCRATCH/checkpoints/stage0_futurel150k_run1"          # CORRECTED 2026-09-24 -- was stage0_run1 (job 57910's baseline dir, must stay untouched), see comment block above
-RESUME_FROM=""                                     # set to a prior step_NNNN dir to resume -- stays blank, this is a fresh run into a fresh OUTPUT_DIR
-MAX_STEPS=6000                                      # see "MAX_STEPS / SAVE_EVERY RECALIBRATED" comment above
+OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/checkpoints/stage0_v2_run1}"   # Stage 0 v2 (2026-10-02); stage0_futurel150k_run1 = v1 run on wrong frames, keep untouched
+RESUME_FROM="${RESUME_FROM:-}"                                   # set to a prior step_NNNN dir to resume -- stays blank, this is a fresh run into a fresh OUTPUT_DIR
+MAX_STEPS="${MAX_STEPS:-6000}"                                    # see "MAX_STEPS / SAVE_EVERY RECALIBRATED" comment above
 SAVE_EVERY=600                                       # keeps ~10 checkpoints over the run, same density as the old 2000/200
 WANDB_PROJECT="latentvans-stage0"                  # ATTACHED 2026-09-24 at explicit user request -- requires `wandb login` once on the login node first (see comment block above); if that hasn't been done, this fails safely and training proceeds without it
 WANDB_ENTITY=""                                    # optional -- your W&B username/team; blank = account default
-WANDB_RUN_NAME=""                                  # optional -- blank = script default (stage0-<job id>)
+WANDB_RUN_NAME="${WANDB_RUN_NAME:-}"                # optional -- blank = script default (stage0-<job id>)
 
 # Held-out validation (see comment block above). Blank VAL_METADATA_DIR
 # disables eval entirely -- leave these as-is once data_staging.sh's
@@ -210,8 +210,17 @@ EVAL_MAX_EXAMPLES=200
 
 # Pre-extracted frame cache (see comment block above). Blank = both streams
 # live-decode raw video exactly as before this feature existed.
-FRAMES_ROOT="${FRAMES_ROOT:-$SCRATCH/data/panda70m_frames}"
-VAL_FRAMES_ROOT="${VAL_FRAMES_ROOT:-$SCRATCH/data/panda70m_frames_val}"
+FRAMES_ROOT="${FRAMES_ROOT:-$SCRATCH/data/panda70m_frames_v2}"          # v2 = correct TwiFF frame indexing (twiff_frames.py)
+VAL_FRAMES_ROOT="${VAL_FRAMES_ROOT:-$SCRATCH/data/panda70m_frames_val_v2}"
+
+# ---- Stage 0 v2 latent target (see train_stage0_latent_grounding.py, "Stage 0 v2") ----
+# Pick the variant from analyze_stage0_targets.sh's output; TARGET_STATS must match layout+delta.
+TARGET_LAYOUT="${TARGET_LAYOUT:-quadrants}"          # pooled | quadrants
+TARGET_DELTA="${TARGET_DELTA:-0}"                    # 1 = future minus context
+TARGET_STATS="${TARGET_STATS:-}"                     # e.g. $SCRATCH/data/stage0_targets_v2/target_stats_quadrants_abs.pt
+LATENT_HEAD="${LATENT_HEAD:-linear}"                 # none | linear
+LAMBDA_LATENT="${LAMBDA_LATENT:-1.0}"                # 0.1 in v1, where the raw-target MSE was ~0.2; z-scored targets start at ~1.0
+WEIGHT_DECAY="${WEIGHT_DECAY:-0.01}"
 
 echo "===== Stage 0: Latent Grounding SFT ====="
 echo "Job ID: ${SLURM_JOB_ID:-not-running-under-slurm}"
@@ -305,7 +314,9 @@ fi
 # given claude/latentvans-handoff.md's whole ncclCommResume saga, sanity-check
 # `python -c "import torch; print(torch.__version__)"` after this if anything
 # about the torch/CUDA env looks off following this run.
-python -m pip install --upgrade decord peft wandb
+# Install only what's missing -- a bare `pip install --upgrade` can drag the pinned torch along
+# (see the ncclCommResume history in the project notes).
+python -c "import peft, wandb" 2>/dev/null || python -m pip install peft wandb
 
 ARGS=(
     --qwen_dir "$QWEN_DIR"
@@ -317,7 +328,13 @@ ARGS=(
     --grad_accum_steps 8
     --max_steps "$MAX_STEPS"
     --save_every "$SAVE_EVERY"
+    --target_layout "$TARGET_LAYOUT"
+    --latent_head "$LATENT_HEAD"
+    --lambda_latent "$LAMBDA_LATENT"
+    --weight_decay "$WEIGHT_DECAY"
 )
+[[ "$TARGET_DELTA" == "1" ]] && ARGS+=(--target_delta)
+[[ -n "$TARGET_STATS" ]] && ARGS+=(--target_stats "$TARGET_STATS")
 ARGS+=("${EXCLUDE_ARGS[@]}")
 ARGS+=("${VAL_ARGS[@]}")
 ARGS+=("${FRAMES_ARGS[@]}")
