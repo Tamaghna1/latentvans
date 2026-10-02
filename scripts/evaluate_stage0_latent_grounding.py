@@ -124,6 +124,7 @@ from train_stage0_latent_grounding import (  # noqa: E402
     log,
     verify_vision_target_dim,
 )
+from stage0_targets import load_target_stats  # noqa: E402
 
 
 STEP_DIR_RE = re.compile(r"^step_(\d+)$")
@@ -233,6 +234,9 @@ def parse_args():
                         "checkpoint found there.")
     p.add_argument("--val_metadata_dir", required=True)
     p.add_argument("--val_video_root", required=True)
+    p.add_argument("--val_frames_root", default=None,
+                   help="Pre-extracted validation frame cache (extract_stage0_frames.py, v2). Unset = "
+                        "live-decode --val_video_root.")
     p.add_argument("--val_exclude_flagged_json", default=None)
     p.add_argument("--eval_max_examples", type=int, default=200,
                    help="Cap per checkpoint. The same --eval_max_examples validation examples "
@@ -310,12 +314,11 @@ def main():
     log(f"torch={torch.__version__} device={device} compute_dtype={compute_dtype}")
 
     try:
-        import decord  # noqa: F401
         import peft  # noqa: F401
         import transformers  # noqa: F401
     except ImportError as e:
         log(f"FATAL: missing dependency ({e}). Try:\n"
-            f"  python -m pip install --upgrade 'transformers>=4.49.0' decord peft")
+            f"  python -m pip install --upgrade 'transformers>=4.49.0' peft")
         sys.exit(1)
 
     only_steps = [int(s) for s in args.steps.split(",")] if args.steps else None
@@ -355,11 +358,28 @@ def main():
 
     metrics_path = os.path.join(output_dir, "eval_metrics.jsonl")
     eval_rows = []
-    eval_args = argparse.Namespace(
-        eval_max_examples=args.eval_max_examples,
-        latent_span_len=args.latent_span_len,
-        max_answer_chars=args.max_answer_chars,
-    )
+    def checkpoint_eval_setup(ckpt_dir):
+        """Target config the checkpoint was trained with (stage0_target_config.json, written since
+        Stage 0 v2), or v1's settings for older checkpoints, plus its latent head if it has one."""
+        cfg_path = os.path.join(ckpt_dir, "stage0_target_config.json")
+        cfg = {"target_layout": "pooled", "target_delta": False, "target_stats": None,
+               "latent_head": "none", "ce_on_latent_pads": True}
+        if os.path.exists(cfg_path):
+            with open(cfg_path) as f:
+                cfg.update(json.load(f))
+        eval_args = argparse.Namespace(
+            eval_max_examples=args.eval_max_examples,
+            latent_span_len=args.latent_span_len,
+            max_answer_chars=args.max_answer_chars,
+            target_layout=cfg["target_layout"],
+            target_delta=cfg["target_delta"],
+            ce_on_latent_pads=cfg["ce_on_latent_pads"],
+        )
+        head = None
+        if cfg["latent_head"] == "linear":
+            head = torch.nn.Linear(QWEN_HIDDEN_SIZE, QWEN_HIDDEN_SIZE).to(device)
+            head.load_state_dict(torch.load(os.path.join(ckpt_dir, "latent_head.pt"), map_location=device))
+        return eval_args, head, load_target_stats(cfg["target_stats"]), cfg
 
     for step, ckpt_dir in checkpoints:
         log("=" * 70)
@@ -372,13 +392,17 @@ def main():
         # Fresh stream every checkpoint, same seed -- every checkpoint sees the identical
         # sequence of validation examples, so the numbers across steps are comparable.
         val_stream = TwiFFStage0Stream(
-            args.val_metadata_dir, args.val_video_root, seed=args.seed, exclude_videos=val_exclude_videos
+            args.val_metadata_dir, args.val_video_root, seed=args.seed, exclude_videos=val_exclude_videos,
+            frames_root=args.val_frames_root,
         )
         log(f"validation stream: {len(val_stream)} row(s) usable")
 
         t0 = time.time()
-        val_ce, val_lat, n_eval = evaluate(
-            vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, eval_args
+        eval_args, latent_head, target_stats, target_cfg = checkpoint_eval_setup(ckpt_dir)
+        log(f"target config for this checkpoint: {target_cfg}")
+        val_ce, val_lat, n_eval, val_zero = evaluate(
+            vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, eval_args,
+            latent_head=latent_head, target_stats=target_stats,
         )
         dt = time.time() - t0
 
@@ -388,10 +412,11 @@ def main():
         else:
             val_total = val_ce + args.lambda_latent * val_lat
             log(f"  step {step}: val_loss_ce={val_ce:.4f} val_loss_latent={val_lat:.4f} "
-                f"val_loss_total={val_total:.4f} (n={n_eval}, {dt:.1f}s)")
+                f"val_latent_zero_mse={val_zero:.4f} val_loss_total={val_total:.4f} (n={n_eval}, {dt:.1f}s)")
             row = {
                 "step": step, "val_loss_ce": val_ce, "val_loss_latent": val_lat,
-                "val_loss_total": val_total, "n_eval": n_eval, "time": time.time(),
+                "val_loss_total": val_total, "val_latent_zero_mse": val_zero, "n_eval": n_eval,
+                "time": time.time(),
             }
             eval_rows.append(row)
             with open(metrics_path, "a") as f:

@@ -61,6 +61,21 @@ script to read pre-extracted frames from this cache instead of the raw
 clips (which is what would actually remove decord and the raw clips from
 the training-time critical path) is a separate change, not made here.
 
+FRAME INDEX FIX (2026-10-02) -- caches built before this date are WRONG
+------------------------------------------------------------------------
+TwiFF's frame indices are positions among 8 frames sampled across the clip
+(index 1 = first frame, 8 = last, 2..7 = centres of 6 equal segments), not
+raw frame numbers -- see twiff_frames.py for the formula and how it was
+established. The original version of this script passed the indices straight
+to decord as frame numbers, so data/panda70m_frames holds frames from the
+first ~0.3 s of every clip, under the right file names. Re-extract into a
+fresh --output_dir (extract_stage0_frames.sh now defaults to
+data/panda70m_frames_v2). Decoding now goes through single-threaded ffmpeg
+(twiff_frames.read_twiff_frames) instead of decord, which also removes most of
+the decord decode failures described below. File naming is unchanged
+(<output_dir>/<clip_stem>/<twiff_index>.jpg), so train_stage0_latent_grounding.py's
+load_extracted_frames reads the new cache without changes.
+
 What it extracts
 ------------------------------------------------------------------------
 For every row in --metadata_dir (same TwiFF/Future-L1-50K schema
@@ -71,18 +86,18 @@ than one QA row -- same dedup-by-filename pattern download_panda70m_clips.py
 already uses for source videos) and takes the UNION of that video's
 question_images_index and reasoning_images_index across every row that
 references it -- the full set of frame indices any training example could
-ever ask that clip for. Each frame is decoded once via decord and saved as
-a JPEG at --output_dir/<video_stem>/<frame_idx>.jpg.
+ever ask that clip for. Each frame is decoded once (ffmpeg, see above) and
+saved as a JPEG at --output_dir/<video_stem>/<twiff_index>.jpg.
 
 Usage
 -----
     python extract_stage0_frames.py \\
         --metadata_dir /scratch/users/anirban/tamaghnam/latentvans/data/future_l1_50k_metadata_full \\
         --video_root /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_clips \\
-        --output_dir /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames \\
+        --output_dir /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames_v2 \\
         --num_workers 8
 
-Needs `decord` (already a training dependency) and Pillow.
+Needs the env's ffmpeg/ffprobe binaries and Pillow.
 """
 import argparse
 import concurrent.futures
@@ -91,6 +106,9 @@ import os
 import sys
 import time
 import traceback
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from twiff_frames import TWIFF_NUM_FRAMES, read_twiff_frames  # noqa: E402
 
 
 def log(msg):
@@ -168,11 +186,11 @@ def already_extracted(out_dir, indices):
 
 
 def extract_one(args_tuple):
-    """Runs in a worker process. Opens video_path once via decord (same call
-    pattern as train_stage0_latent_grounding.py's load_video_frames), pulls
-    every requested frame index, and saves each as a JPEG. Returns a status
-    dict -- never raises; any decode/file error is caught and reported so
-    one bad clip can't kill the whole pool."""
+    """Runs in a worker process. Decodes video_path once via
+    twiff_frames.read_twiff_frames (TwiFF index -> frame mapping, ffmpeg
+    decode), and saves each requested index as <twiff_index>.jpg. Returns a
+    status dict -- never raises; any decode/file error is caught and reported
+    so one bad clip can't kill the whole pool."""
     video_filename, indices, video_root, output_dir, jpeg_quality = args_tuple
     stem = video_filename[:-4] if video_filename.endswith(".mp4") else video_filename
     clip_out_dir = os.path.join(output_dir, stem)
@@ -181,30 +199,24 @@ def extract_one(args_tuple):
     if not os.path.exists(video_path):
         return {"video": video_filename, "status": "missing_file", "n_requested": len(indices), "n_extracted": 0}
 
+    valid = [i for i in indices if 1 <= i <= TWIFF_NUM_FRAMES]
+    if not valid:
+        return {"video": video_filename, "status": "out_of_range", "n_requested": len(indices),
+                "n_extracted": 0, "error": f"no TwiFF index in 1..{TWIFF_NUM_FRAMES}, wanted {indices}"}
     try:
-        import decord
         from PIL import Image
 
-        decord.bridge.set_bridge("native")
-        vr = decord.VideoReader(video_path)
-        n = len(vr)
-        valid = [i for i in indices if 0 <= i < n]
-        if not valid:
-            return {"video": video_filename, "status": "out_of_range", "n_requested": len(indices),
-                    "n_extracted": 0, "error": f"clip has {n} frames, wanted {indices}"}
-        batch = vr.get_batch(valid).asnumpy()
+        frames = read_twiff_frames(video_path, valid)
         os.makedirs(clip_out_dir, exist_ok=True)
-        for idx, frame in zip(valid, batch):
-            Image.fromarray(frame).save(
-                os.path.join(clip_out_dir, f"{idx}.jpg"), quality=jpeg_quality
-            )
+        for idx in valid:
+            Image.fromarray(frames[idx]).save(os.path.join(clip_out_dir, f"{idx}.jpg"), quality=jpeg_quality)
         skipped_indices = sorted(set(indices) - set(valid))
         status = "ok" if not skipped_indices else "partial"
         return {"video": video_filename, "status": status, "n_requested": len(indices),
                 "n_extracted": len(valid), "skipped_indices": skipped_indices}
     except Exception as e:
         return {"video": video_filename, "status": "decode_failed", "n_requested": len(indices),
-                "n_extracted": 0, "error": str(e)}
+                "n_extracted": 0, "error": str(e)[:500]}
 
 
 def main():

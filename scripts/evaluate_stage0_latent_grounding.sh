@@ -61,6 +61,7 @@ CHECKPOINT_ROOT="${CHECKPOINT_ROOT:-$SCRATCH/checkpoints/stage0_run1}"
 VAL_METADATA_DIR="${VAL_METADATA_DIR:-$SCRATCH/data/twiff_metadata_val}"
 VAL_VIDEO_ROOT="${VAL_VIDEO_ROOT:-$SCRATCH/data/panda70m_clips_val}"
 VAL_EXCLUDE_FLAGGED_JSON="${VAL_EXCLUDE_FLAGGED_JSON:-$VAL_VIDEO_ROOT/quality_screen_flagged.json}"
+VAL_FRAMES_ROOT="${VAL_FRAMES_ROOT:-$SCRATCH/data/panda70m_frames_val_v2}"   # v2 cache (correct TwiFF indexing); blank = live-decode
 EVAL_MAX_EXAMPLES="${EVAL_MAX_EXAMPLES:-200}"
 STEPS="${STEPS:-}"                     # e.g. STEPS=200,600,1000,1400,1800,2000 to subsample
 WANDB_PROJECT="stage0"      # blank = off, same opt-in pattern as training
@@ -122,6 +123,11 @@ if [[ -f "$VAL_EXCLUDE_FLAGGED_JSON" ]]; then
 else
     echo "WARNING: $VAL_EXCLUDE_FLAGGED_JSON not found -- proceeding WITHOUT validation quality-screen exclusion." >&2
 fi
+FRAMES_ARGS=()
+if [[ -n "$VAL_FRAMES_ROOT" ]] && [[ -d "$VAL_FRAMES_ROOT" ]]; then
+    FRAMES_ARGS=(--val_frames_root "$VAL_FRAMES_ROOT")
+fi
+
 WANDB_ARGS=()
 if [[ -n "$WANDB_PROJECT" ]]; then
     WANDB_ARGS=(--wandb_project "$WANDB_PROJECT")
@@ -138,6 +144,7 @@ python "$SCRATCH/scripts/evaluate_stage0_latent_grounding.py" \
     --eval_max_examples "$EVAL_MAX_EXAMPLES" \
     "${STEPS_ARGS[@]}" \
     "${VAL_EXCLUDE_ARGS[@]}" \
+    "${FRAMES_ARGS[@]}" \
     "${WANDB_ARGS[@]}"
 
 echo "===== Validation-only evaluation completed — see $CHECKPOINT_ROOT/eval_only/ ====="

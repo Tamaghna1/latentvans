@@ -47,7 +47,7 @@ ENV="/scratch/users/anirban/tamaghnam/envs/latentvans"
 
 METADATA_DIR="${METADATA_DIR:-$SCRATCH/data/future_l1_50k_metadata_full}"
 VIDEO_ROOT="${VIDEO_ROOT:-$SCRATCH/data/panda70m_clips}"
-OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/data/panda70m_frames}"
+OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/data/panda70m_frames_v2}"   # v2 (2026-10-02): panda70m_frames was extracted with the wrong TwiFF index mapping, see twiff_frames.py
 NUM_WORKERS="${NUM_WORKERS:-8}"
 JPEG_QUALITY="${JPEG_QUALITY:-95}"
 

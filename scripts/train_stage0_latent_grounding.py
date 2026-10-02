@@ -307,6 +307,35 @@ validation split regardless of which slice --metadata_dir points at (see
 check_train_val_overlap.sh and the 2026-09-23 decision log entry
 confirming zero/negligible overlap against Future-L1-50K specifically).
 
+Stage 0 v2 (2026-10-02)
+------------------------------------------------------------------------
+Three changes after diagnose_stage0_grounding.py found the v1 run
+(stage0_futurel150k_run1) scoring no better than "predict the average target":
+
+1. FRAME INDEX BUG. question_images_index/reasoning_images_index index 8
+   frames TwiFF sampled across the clip, not raw frame numbers (see
+   twiff_frames.py). Every run before this date read frames from the first
+   ~0.3 s of each clip, so "future" frames were ~0.1 s after the context frame.
+   load_video_frames() now maps indices correctly and decodes with ffmpeg; the
+   frame caches must be re-extracted (panda70m_frames_v2 / panda70m_frames_val_v2).
+2. CE NO LONGER SUPERVISES <|latent_pad|>. labels used to include the latent
+   pad positions, so CE trained the hidden state there to predict the next
+   pad token while L_latent pulled it toward the frame target. They are now
+   -100; --ce_on_latent_pads restores the old behavior.
+3. TARGET OPTIONS (stage0_targets.py): --target_layout quadrants (one target
+   per latent slot from a 2x2 spatial split), --target_delta (future minus
+   context), --target_stats (z-score with training-set stats from
+   analyze_stage0_targets.py), and --latent_head linear (a trainable 2048x2048
+   head between the latent hidden state and the target, saved as
+   latent_head.pt). Defaults reproduce v1's target. Each eval also logs
+   val_latent_zero_mse, the MSE of always predicting the training mean, so
+   val_loss_latent can be read against it directly.
+4. ONLY THE NEW TOKEN ROWS ARE TRAINED. v1 kept full copies of embed_tokens
+   and lm_head trainable (peft modules_to_save, ~625M params) just to learn 3
+   new rows, making each checkpoint ~4.4 GB with optimizer state -- the cause of
+   the repeated "Disk quota exceeded" crashes. peft trainable_token_indices now
+   trains just those rows; --full_embedding_training restores v1.
+
 Usage
 -----
     python train_stage0_latent_grounding.py \\
@@ -332,11 +361,8 @@ Usage
         --frames_root /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames \\
         --val_frames_root /scratch/users/anirban/tamaghnam/latentvans/data/panda70m_frames_val
 
-Needs `decord` for frame-accurate video seeking and `peft` for LoRA (both
-pip install decord peft) -- not yet in any install list; added to this
-script's own dependency check. `decord` is only imported when at least one
-active stream is still live-decoding raw video (i.e. --frames_root/
---val_frames_root isn't covering every stream in use) -- see main().
+Needs `peft` for LoRA. Live decoding (any stream without a frames cache) uses
+the env's ffmpeg/ffprobe binaries via twiff_frames.py; decord is no longer used.
 """
 import argparse
 import json
@@ -349,6 +375,10 @@ import traceback
 
 import torch
 import torch.nn.functional as F
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from stage0_targets import compute_target, expand_to_slots, load_target_stats  # noqa: E402
+from twiff_frames import read_twiff_frames  # noqa: E402
 
 
 LATENT_START = "<|latent_start|>"
@@ -387,22 +417,20 @@ class NoUsableExamplesError(RuntimeError):
 
 
 def load_video_frames(video_path, indices):
-    """Extract specific 0-indexed frame numbers from an mp4 as PIL Images.
-    Uses decord for direct frame-index seeking (no fps/pts bookkeeping).
-    Only used for a stream when --frames_root/--val_frames_root is NOT
-    set for it -- see load_extracted_frames() for the pre-extracted-cache
-    path, and module docstring, "Pre-extracted frame cache"."""
-    import decord
+    """Decode the frames at TwiFF frame indices `indices` from an mp4 as PIL Images,
+    in the same order as `indices`.
+
+    FIXED 2026-10-02: indices are TwiFF's 1..8 sampled-frame positions, not raw
+    frame numbers -- see twiff_frames.py. This used to pass them straight to
+    decord as frame numbers. Decoding is now single-threaded ffmpeg, which also
+    avoids decord's threaded-decoder failures on stream-copied clips. Only used
+    for a stream when --frames_root/--val_frames_root is NOT set for it."""
     from PIL import Image
 
-    decord.bridge.set_bridge("native")
-    vr = decord.VideoReader(video_path)
-    n = len(vr)
-    valid = [i for i in indices if 0 <= i < n]
-    if not valid:
-        raise ValueError(f"no valid frame indices in {video_path} (has {n} frames, wanted {indices})")
-    batch = vr.get_batch(valid).asnumpy()  # (len(valid), H, W, 3) uint8
-    return [Image.fromarray(f) for f in batch]
+    if not indices:
+        raise ValueError(f"no frame indices requested for {video_path}")
+    frames = read_twiff_frames(video_path, indices)
+    return [Image.fromarray(frames[int(i)]) for i in indices]
 
 
 def load_extracted_frames(frames_root, video_filename, indices):
@@ -680,7 +708,8 @@ def log_new_token_embedding_norms(vlm, tokenizer, new_token_strs):
         log(line)
 
 
-def build_training_example(example, processor, tokenizer, latent_span_len, max_answer_chars):
+def build_training_example(example, processor, tokenizer, latent_span_len, max_answer_chars,
+                           ce_on_latent_pads=False):
     answer = example["answer"]
     if len(answer) > max_answer_chars:
         answer = answer[:max_answer_chars]
@@ -721,11 +750,31 @@ def build_training_example(example, processor, tokenizer, latent_span_len, max_a
             f"expected {latent_span_len} <|latent_pad|> tokens, tokenizer produced {n_latent} -- "
             f"tokenizer likely merged/split the repeated placeholder text."
         )
+    if not ce_on_latent_pads:
+        # The pad positions carry the latent target (L_latent); CE must not also train them
+        # to predict the next placeholder token. See module docstring, "Stage 0 v2".
+        labels[0, latent_mask] = -100
     return full_inputs, latent_mask
 
 
+def latent_loss(out, latent_mask, target, latent_head):
+    """L_latent for one example: MSE between (head of) the latent-slot hidden states and the
+    (S, d) target expanded to one row per slot. Also returns the MSE of predicting zeros,
+    which for z-scored targets is the "predict the training mean" baseline."""
+    h_latent = out.hidden_states[-1][0, latent_mask, :].float()  # (latent_span_len, 2048)
+    pred = latent_head(h_latent) if latent_head is not None else h_latent
+    tgt = expand_to_slots(target.to(pred.device).float(), pred.shape[0])
+    return F.mse_loss(pred, tgt), tgt.pow(2).mean()
+
+
+def example_target(example, args, target_stats, processor, vision_tower, device, compute_dtype):
+    return compute_target(example, args.target_layout, args.target_delta, target_stats,
+                          processor, vision_tower, device, compute_dtype)
+
+
 @torch.no_grad()
-def evaluate(vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, args):
+def evaluate(vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, args,
+             latent_head=None, target_stats=None):
     """Read-only held-out evaluation (added 2026-09-12 -- see module
     docstring, "Held-out validation"). Runs up to --eval_max_examples
     examples from val_stream through the exact same forward pass and loss
@@ -736,31 +785,40 @@ def evaluate(vlm, val_stream, processor, tokenizer, vision_tower, device, comput
     actually evaluated). Restores vlm.train() before returning so the
     caller's training loop resumes exactly as it left off."""
     vlm.eval()
-    ce_losses, latent_losses = [], []
+    if latent_head is not None:
+        latent_head.eval()
+    ce_losses, latent_losses, zero_losses = [], [], []
     n = min(args.eval_max_examples, len(val_stream))
     for _ in range(n):
         example = val_stream.next_usable_example()
-        target = compute_future_embedding(
-            example["future_frames"], processor, vision_tower, device, compute_dtype
-        )
+        target = example_target(example, args, target_stats, processor, vision_tower, device, compute_dtype)
         inputs, latent_mask = build_training_example(
-            example, processor, tokenizer, args.latent_span_len, args.max_answer_chars
+            example, processor, tokenizer, args.latent_span_len, args.max_answer_chars,
+            ce_on_latent_pads=args.ce_on_latent_pads,
         )
         inputs = {k: v.to(device) for k, v in inputs.items()}
         out = vlm(**inputs, output_hidden_states=True, return_dict=True)
-        h_latent = out.hidden_states[-1][0, latent_mask, :]
-        loss_latent = F.mse_loss(h_latent.float(), target.unsqueeze(0).expand_as(h_latent).float())
+        loss_latent, zero_mse = latent_loss(out, latent_mask, target, latent_head)
         ce_losses.append(out.loss.item())
         latent_losses.append(loss_latent.item())
+        zero_losses.append(zero_mse.item())
     vlm.train()
+    if latent_head is not None:
+        latent_head.train()
     if not ce_losses:
-        return None, None, 0
-    return sum(ce_losses) / len(ce_losses), sum(latent_losses) / len(latent_losses), n
+        return None, None, 0, None
+    mean = lambda xs: sum(xs) / len(xs)  # noqa: E731
+    return mean(ce_losses), mean(latent_losses), n, mean(zero_losses)
 
 
-def save_checkpoint(output_dir, step, vlm, tokenizer, optimizer, scheduler):
+def save_checkpoint(output_dir, step, vlm, tokenizer, optimizer, scheduler, latent_head=None, target_config=None):
     ckpt_dir = os.path.join(output_dir, f"step_{step}")
     os.makedirs(ckpt_dir, exist_ok=True)
+    if latent_head is not None:
+        torch.save(latent_head.state_dict(), os.path.join(ckpt_dir, "latent_head.pt"))
+    if target_config is not None:
+        with open(os.path.join(ckpt_dir, "stage0_target_config.json"), "w") as f:
+            json.dump(target_config, f, indent=2)
     # If vlm is a peft PeftModel (the --use_lora default), this writes only the
     # adapter weights + the fully-trainable embed_tokens/lm_head copies -- NOT a
     # full copy of the 3B-parameter base model. See this file's module docstring,
@@ -843,6 +901,20 @@ def load_model_and_tokenizer(args, device, compute_dtype):
             processor.tokenizer = tokenizer
             log(f"resumed LoRA adapter (+ embed_tokens/lm_head) from {args.resume_from}")
         else:
+            # The 3 latent-reasoning tokens are brand new vocab rows with no pretrained
+            # weight for a low-rank delta to adapt -- they need real gradient updates.
+            if args.full_embedding_training:
+                # v1: full trainable copies of embed_tokens + lm_head (~625M params). Each
+                # checkpoint is then ~1.2 GB of adapter plus ~3 GB of optimizer state, which is
+                # what keeps filling the scratch quota.
+                new_token_kwargs = {"modules_to_save": ["embed_tokens", "lm_head"]}
+                new_token_desc = "embed_tokens/lm_head kept fully trainable"
+            else:
+                # Default since 2026-10-02: train only the 3 new rows. lm_head is tied to
+                # embed_tokens in Qwen2.5-VL-3B, and peft applies the same rows to the tied head.
+                new_ids = tokenizer.convert_tokens_to_ids([LATENT_START, LATENT_END, LATENT_PAD])
+                new_token_kwargs = {"trainable_token_indices": {"embed_tokens": new_ids}}
+                new_token_desc = f"only the new latent-token rows {new_ids} of embed_tokens trainable"
             lora_config = LoraConfig(
                 r=args.lora_r,
                 lora_alpha=args.lora_alpha,
@@ -850,15 +922,11 @@ def load_model_and_tokenizer(args, device, compute_dtype):
                 bias="none",
                 task_type="CAUSAL_LM",
                 target_modules=args.lora_target_modules.split(","),
-                # The 3 latent-reasoning tokens are brand new vocab rows with no
-                # pretrained weight for a low-rank delta to adapt -- they need real
-                # gradient updates from scratch, so keep these two layers fully
-                # trainable (peft copies + unfreezes them; the base copy stays frozen).
-                modules_to_save=["embed_tokens", "lm_head"],
+                **new_token_kwargs,
             )
             vlm = get_peft_model(vlm, lora_config)
-            log("applied a fresh LoRA config (embed_tokens/lm_head kept fully trainable "
-                "for the new latent tokens; everything else outside target_modules stays frozen)")
+            log(f"applied a fresh LoRA config ({new_token_desc}; everything else outside "
+                f"target_modules stays frozen)")
 
         # Defensive: target_modules is matched by leaf module NAME anywhere in the
         # model. This hasn't been confirmed against Qwen2.5-VL's actual vision-tower
@@ -945,6 +1013,26 @@ def parse_args():
                    help="W&B run name (default: 'stage0-<SLURM job id or timestamp>')")
 
     p.add_argument("--latent_span_len", type=int, default=4, help="Future-L1's optimal L_max for text answers")
+    p.add_argument("--target_layout", choices=["pooled", "quadrants"], default="pooled",
+                   help="Latent target layout (stage0_targets.py): 'pooled' = one vector repeated over "
+                        "every slot (v1); 'quadrants' = one vector per 2x2 spatial quadrant, slot i <- "
+                        "quadrant i. See module docstring, 'Stage 0 v2'.")
+    p.add_argument("--target_delta", action="store_true",
+                   help="Target = future features minus context features (what changes), not future features.")
+    p.add_argument("--target_stats", default=None,
+                   help="target_stats_<layout>_<delta|abs>.pt from analyze_stage0_targets.py: z-score the "
+                        "target per dim with training-set mean/std. Must match --target_layout/--target_delta.")
+    p.add_argument("--latent_head", choices=["none", "linear"], default="none",
+                   help="'linear' adds a trainable 2048x2048 layer between the latent-slot hidden state and "
+                        "the target (saved as latent_head.pt in each checkpoint). 'none' regresses the "
+                        "hidden state directly (v1).")
+    p.add_argument("--ce_on_latent_pads", action="store_true",
+                   help="Also apply CE to the <|latent_pad|> positions (v1 behavior, unintended). Off by default.")
+    p.add_argument("--weight_decay", type=float, default=0.0, help="AdamW weight decay (v1: 0)")
+    p.add_argument("--full_embedding_training", action="store_true",
+                   help="Train full copies of embed_tokens and lm_head via peft modules_to_save (v1 behavior, "
+                        "~625M trainable params, ~4 GB per checkpoint). Default: train only the three new "
+                        "latent-token rows via peft trainable_token_indices.")
     p.add_argument("--lambda_latent", type=float, default=0.1, help="Weight on L_latent (Future-L1's value)")
     p.add_argument("--max_answer_chars", type=int, default=1500, help="Safety truncation on TwiFF answer text")
 
@@ -1065,7 +1153,7 @@ def main():
     # --val_frames_root covers it too, no stream ever calls load_video_frames() this
     # run, so don't require decord to be importable just to start. See module
     # docstring, "Pre-extracted frame cache".
-    needs_decord = (not args.frames_root) or (args.val_metadata_dir and not args.val_frames_root)
+    needs_decord = False  # live decoding goes through ffmpeg (twiff_frames.py) since 2026-10-02
     try:
         import transformers
         if needs_decord:
@@ -1089,6 +1177,20 @@ def main():
     # runs before the expensive TwiFF/video data loading and the training loop itself.
     verify_vision_target_dim(processor, vision_tower, device, compute_dtype)
 
+    target_stats = load_target_stats(args.target_stats)
+    target_config = {"target_layout": args.target_layout, "target_delta": args.target_delta,
+                     "target_stats": args.target_stats, "latent_head": args.latent_head,
+                     "ce_on_latent_pads": args.ce_on_latent_pads, "latent_span_len": args.latent_span_len}
+    log(f"latent target config: {target_config}")
+    latent_head = None
+    if args.latent_head == "linear":
+        latent_head = torch.nn.Linear(QWEN_HIDDEN_SIZE, QWEN_HIDDEN_SIZE).to(device)
+        head_path = os.path.join(args.resume_from, "latent_head.pt") if args.resume_from else None
+        if head_path and os.path.exists(head_path):
+            latent_head.load_state_dict(torch.load(head_path, map_location=device))
+            log(f"resumed latent head from {head_path}")
+        latent_head.train()
+
     if args.gradient_checkpointing:
         if args.use_lora:
             # Required for gradient checkpointing to actually backprop through a
@@ -1101,7 +1203,9 @@ def main():
     vlm.train()
 
     trainable_params = [p for p in vlm.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(trainable_params, lr=args.lr)
+    if latent_head is not None:
+        trainable_params += list(latent_head.parameters())
+    optimizer = torch.optim.AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
     scheduler = get_cosine_schedule_with_warmup(optimizer, args.warmup_steps, args.max_steps)
     start_step = 0
     if args.resume_from:
@@ -1159,18 +1263,16 @@ def main():
 
             for _ in range(args.grad_accum_steps):
                 example = stream.next_usable_example()
-                target = compute_future_embedding(
-                    example["future_frames"], processor, vision_tower, device, compute_dtype
-                )
+                target = example_target(example, args, target_stats, processor, vision_tower, device, compute_dtype)
                 inputs, latent_mask = build_training_example(
-                    example, processor, tokenizer, args.latent_span_len, args.max_answer_chars
+                    example, processor, tokenizer, args.latent_span_len, args.max_answer_chars,
+                    ce_on_latent_pads=args.ce_on_latent_pads,
                 )
                 inputs = {k: v.to(device) for k, v in inputs.items()}
 
                 out = vlm(**inputs, output_hidden_states=True, return_dict=True)
                 loss_ce = out.loss
-                h_latent = out.hidden_states[-1][0, latent_mask, :]  # (latent_span_len, 2048)
-                loss_latent = F.mse_loss(h_latent.float(), target.unsqueeze(0).expand_as(h_latent).float())
+                loss_latent, _ = latent_loss(out, latent_mask, target, latent_head)
                 loss = (loss_ce + args.lambda_latent * loss_latent) / args.grad_accum_steps
                 loss.backward()
 
@@ -1219,8 +1321,9 @@ def main():
             # evaluated.
             if val_stream is not None and step > 0 and step % eval_every == 0:
                 eval_t0 = time.time()
-                val_ce, val_lat, n_eval = evaluate(
-                    vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, args
+                val_ce, val_lat, n_eval, val_zero = evaluate(
+                    vlm, val_stream, processor, tokenizer, vision_tower, device, compute_dtype, args,
+                    latent_head=latent_head, target_stats=target_stats,
                 )
                 if n_eval == 0:
                     log(f"  [eval] step {step}: validation stream produced 0 usable examples -- "
@@ -1228,17 +1331,19 @@ def main():
                 else:
                     val_total = val_ce + args.lambda_latent * val_lat
                     log(f"  [eval] step {step}: val_loss_ce={val_ce:.4f} val_loss_latent={val_lat:.4f} "
-                        f"val_loss_total={val_total:.4f} (n={n_eval}, {time.time() - eval_t0:.1f}s)")
+                        f"val_latent_zero_mse={val_zero:.4f} val_loss_total={val_total:.4f} "
+                        f"(n={n_eval}, {time.time() - eval_t0:.1f}s)")
                     with open(metrics_path, "a") as f:
                         f.write(json.dumps({
                             "step": step, "val_loss_ce": val_ce, "val_loss_latent": val_lat,
-                            "val_loss_total": val_total, "val_n": n_eval, "time": time.time(),
+                            "val_loss_total": val_total, "val_n": n_eval, "val_latent_zero_mse": val_zero,
+                            "time": time.time(),
                         }) + "\n")
                     if wandb_run is not None:
                         try:
                             wandb_run.log({
                                 "val_loss_ce": val_ce, "val_loss_latent": val_lat,
-                                "val_loss_total": val_total,
+                                "val_loss_total": val_total, "val_latent_zero_mse": val_zero,
                             }, step=step)
                         except Exception as e:
                             log(f"WARNING: wandb.log() (val) failed ({e}) -- disabling W&B logging "
@@ -1246,9 +1351,9 @@ def main():
                             wandb_run = None
 
             if step > 0 and step % args.save_every == 0:
-                save_checkpoint(args.output_dir, step, vlm, tokenizer, optimizer, scheduler)
+                save_checkpoint(args.output_dir, step, vlm, tokenizer, optimizer, scheduler, latent_head, target_config)
 
-        save_checkpoint(args.output_dir, args.max_steps, vlm, tokenizer, optimizer, scheduler)
+        save_checkpoint(args.output_dir, args.max_steps, vlm, tokenizer, optimizer, scheduler, latent_head, target_config)
         log("=" * 70)
         log("STAGE 0 TRAINING COMPLETE")
         log("=" * 70)
