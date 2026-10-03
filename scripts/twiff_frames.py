@@ -140,3 +140,43 @@ def read_twiff_frames(video_path, indices, timeout=300):
         if k not in out:
             out[k] = np.frombuffer(last_buf, np.uint8).reshape(h, w, 3)
     return out
+
+
+def twiff_index_fraction(index):
+    """Position of a TwiFF frame index as a fraction of the clip (0 .. 1)."""
+    if index == 1:
+        return 0.0
+    if index == TWIFF_NUM_FRAMES:
+        return 1.0
+    return (2 * index - 3) / 12
+
+
+def read_frames_resized(video_path, frame_numbers, width, height, timeout=600):
+    """Decode video_path once and return {frame_number: HxWx3 uint8} at width x height
+    (ffmpeg scale, single-threaded). frame_numbers are 0-based displayed-frame numbers;
+    use count_decoded_frames() to build them. A number past the end gets the last frame."""
+    wanted = sorted(set(int(f) for f in frame_numbers))
+    frame_bytes = width * height * 3
+    proc = subprocess.Popen(
+        [ffmpeg_exe(), "-v", "error", "-threads", "1", "-i", video_path, "-map", "0:v:0",
+         "-vf", f"scale={width}:{height}:flags=bicubic", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+    out, last, pos, want = {}, None, 0, set(wanted)
+    try:
+        while pos <= wanted[-1]:
+            buf = proc.stdout.read(frame_bytes)
+            if len(buf) < frame_bytes:
+                break
+            last = buf
+            if pos in want:
+                out[pos] = np.frombuffer(buf, np.uint8).reshape(height, width, 3)
+            pos += 1
+    finally:
+        proc.kill()
+        proc.wait(timeout=timeout)
+    if last is None:
+        raise RuntimeError(f"ffmpeg decoded 0 frames from {video_path}")
+    for f in wanted:
+        out.setdefault(f, np.frombuffer(last, np.uint8).reshape(height, width, 3))
+    return out
