@@ -23,6 +23,15 @@ pooled raw target. For delta targets ctx_copy is skipped (the context is
 already subtracted out). For multi-slot targets every comparison uses the
 slot-flattened vectors.
 
+Two "is the VLM doing more than recognising the scene?" checks (added 2026-10-03):
+
+  ridge_ctx       a ridge regression from the raw context-frame features (same layout)
+                  to the target, fit on the n_train training clips and scored on the
+                  same val clips as the model. If the model only matches this, it has
+                  learned nothing the context frame alone doesn't give.
+  shuffled_q      the model re-run on every val clip with ANOTHER clip's question
+                  (same frames). If MSE does not rise, the latent ignores the question.
+
 Writes <output_json> and prints a verdict. Forward passes only, no training.
 """
 import argparse
@@ -33,7 +42,7 @@ import sys
 import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stage0_targets import compute_target, expand_to_slots, load_target_stats  # noqa: E402
+from stage0_targets import compute_target, expand_to_slots, frames_features, load_target_stats  # noqa: E402
 from wandb_util import flatten, log_summary  # noqa: E402
 from train_stage0_latent_grounding import (  # noqa: E402
     QWEN_HIDDEN_SIZE,
@@ -130,10 +139,16 @@ def main():
     log(f"computing {args.n_train} training targets from {args.train_metadata_dir}")
     train_stream = TwiFFStage0Stream(args.train_metadata_dir, args.train_video_root, seed=args.seed,
                                      frames_root=args.train_frames_root)
-    train_targets = []
+    def ctx_features(ex):
+        """Raw context-frame features in the target's layout, flattened (ridge input)."""
+        return frames_features(ex["context_frames"], cfg["target_layout"], processor, vision_tower,
+                               device, compute_dtype).flatten().cpu()
+
+    train_targets, train_ctx = [], []
     for i in range(args.n_train):
         ex = train_stream.next_usable_example()
         train_targets.append(target_of(ex))
+        train_ctx.append(ctx_features(ex))
         if (i + 1) % 100 == 0:
             log(f"  train targets: {i + 1}/{args.n_train}")
     train_mean = torch.stack(train_targets).mean(0)
@@ -142,9 +157,11 @@ def main():
     val_stream = TwiFFStage0Stream(args.val_metadata_dir, args.val_video_root, seed=args.seed,
                                    frames_root=args.val_frames_root)
     n_val = min(args.n_val, len(val_stream))
-    T, C, H, ce = [], [], [], []
+    T, C, H, ce, H_shuf, val_ctx = [], [], [], [], [], []
+    prev_question = None
     for i in range(n_val):
         ex = val_stream.next_usable_example()
+        val_ctx.append(ctx_features(ex))
         T.append(target_of(ex))
         if not cfg["target_delta"]:
             C.append(context_as_target(ex))
@@ -156,6 +173,16 @@ def main():
         h = out.hidden_states[-1][0, latent_mask, :].float()
         H.append((head(h) if head is not None else h).cpu())
         ce.append(out.loss.item())
+        # Same frames, previous clip's question (the first clip borrows the last one's below).
+        if prev_question is not None:
+            shuf_ex = {**ex, "question": prev_question}
+            s_inputs, s_mask = build_training_example(shuf_ex, processor, tokenizer, args.latent_span_len,
+                                                      args.max_answer_chars,
+                                                      ce_on_latent_pads=cfg["ce_on_latent_pads"])
+            s_inputs = {k: v.to(device) for k, v in s_inputs.items()}
+            hs = vlm(**s_inputs, output_hidden_states=True, return_dict=True).hidden_states[-1][0, s_mask, :].float()
+            H_shuf.append((head(hs) if head is not None else hs).cpu())
+        prev_question = ex["question"]
         if (i + 1) % 50 == 0:
             log(f"  val: {i + 1}/{n_val}")
 
@@ -167,6 +194,26 @@ def main():
         return (pred - target).pow(2).mean().item()
 
     model_mse = mse(H, T3)
+    # shuffled-question MSE over clips 1..n-1 (clip 0 had no previous question), vs the model on the same clips
+    shuffled_q_mse = mse(torch.stack(H_shuf), T3[1:]) if H_shuf else float("nan")
+    model_mse_same_clips = mse(H[1:], T3[1:]) if H_shuf else float("nan")
+
+    def ridge_mse():
+        x_tr, x_va = torch.stack(train_ctx).double(), torch.stack(val_ctx).double()
+        y_tr = torch.stack(train_targets).flatten(1).double()
+        y_va = T3.flatten(1).double()
+        mu_x, mu_y = x_tr.mean(0), y_tr.mean(0)
+        xt, xv = x_tr - mu_x, x_va - mu_x
+        k = xt @ xt.T
+        best = None
+        for lam in (1.0, 10.0, 100.0, 1e3, 1e4, 1e5):
+            alpha = torch.linalg.solve(k + lam * torch.eye(len(k), dtype=k.dtype), y_tr - mu_y)
+            pred = xv @ xt.T @ alpha + mu_y
+            # note: lambda picked on the val clips themselves, so this baseline is if anything optimistic
+            m = (pred - y_va).pow(2).mean().item()
+            if best is None or m < best[1]:
+                best = (lam, m)
+        return best
     baselines = {
         "const_train": mse(train_mean.expand(n_ex, -1, -1), T3),
         "const_val": mse(T3.mean(0).expand(n_ex, -1, -1), T3),
@@ -175,6 +222,7 @@ def main():
     if C:
         C3 = torch.stack(C)
         baselines["ctx_copy"] = mse(C3, T3)
+    ridge_lam, baselines["ridge_ctx"] = ridge_mse()
     r2_vs_const_val = 1 - model_mse / baselines["const_val"]
     T, Hm = T3.flatten(1), H.flatten(1)  # slot-flattened vectors for cosine/retrieval
     matched, mismatched = centered_cosine(Hm, T)
@@ -194,6 +242,10 @@ def main():
         "prediction_spread": Hm.var(0, unbiased=False).mean().item(),
         "centered_cosine_model": {"matched": matched, "mismatched": mismatched},
         "retrieval_model": retrieval(Hm, T),
+        "r2_ridge_ctx": 1 - baselines["ridge_ctx"] / baselines["const_val"],
+        "ridge_ctx_lambda": ridge_lam,
+        "shuffled_question": {"model_mse_same_clips": model_mse_same_clips, "shuffled_q_mse": shuffled_q_mse,
+                              "relative_increase": shuffled_q_mse / model_mse_same_clips - 1},
         "target_config": cfg,
     }
     if C is not None and len(C):
@@ -210,6 +262,10 @@ def main():
     log("=" * 70)
     log(f"model MSE {model_mse:.4f} vs predict-train-mean {baselines['const_train']:.4f} "
         f"vs copy-context {baselines.get('ctx_copy', float('nan')):.4f}  (R^2 vs val mean = {r2_vs_const_val:.3f})")
+    sq = result["shuffled_question"]
+    log(f"R^2: model {r2_vs_const_val:.3f} vs context-frame ridge {result['r2_ridge_ctx']:.3f}; "
+        f"shuffled-question MSE {sq['shuffled_q_mse']:.4f} vs {sq['model_mse_same_clips']:.4f} "
+        f"({100 * sq['relative_increase']:+.1f}%)")
     log(f"retrieval top1 {ret['top1']:.3f} (chance {ret['chance_top1']:.3f}), "
         f"mean rank {ret['mean_rank']:.1f} (chance {ret['chance_mean_rank']:.1f})")
     grounded = not (model_mse >= 0.95 * baselines["const_train"] or ret["top1"] < 3 * ret["chance_top1"])
