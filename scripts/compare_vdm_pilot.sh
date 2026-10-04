@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=vdm_compare
-#SBATCH --partition=a100
+#SBATCH --partition=a100,ada,long
 #SBATCH --gres=gpu:1
 #SBATCH --output=/scratch/users/anirban/tamaghnam/latentvans/logs/vdm_compare_%j.out
 #SBATCH --error=/scratch/users/anirban/tamaghnam/latentvans/logs/vdm_compare_%j.err

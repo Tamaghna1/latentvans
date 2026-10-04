@@ -39,9 +39,12 @@ def parse_args():
 
 def arm_name(cfg):
     if cfg["cond"] == "qwen":
-        return f"qwen:{cfg.get('qwen_layer', 'last')}"
-    return f"{cfg['cond']}:{os.path.basename(cfg['vlm_dir'].rstrip('/'))}" if cfg["cond"] in ("latent", "both") \
-        else cfg["cond"]
+        name = f"qwen:{cfg.get('qwen_layer', 'last')}"
+    elif cfg["cond"] in ("latent", "both"):
+        name = f"{cfg['cond']}:{os.path.basename(cfg['vlm_dir'].rstrip('/'))}"
+    else:
+        name = cfg["cond"]
+    return name + (f":seed{cfg['seed']}" if cfg.get("seed", 0) else "")
 
 
 @torch.no_grad()
