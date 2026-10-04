@@ -50,6 +50,7 @@ def parse_args():
     p.add_argument("--splits", default="val,train")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--save_every", type=int, default=500)
+    p.add_argument("--decode_workers", type=int, default=8, help="parallel ffmpeg decodes feeding the GPU")
     p.add_argument("--output_dir", required=True)
     return p.parse_args()
 
@@ -94,19 +95,32 @@ def encode_videos(args):
         ds, rows, root = split_rows(args, split)
         log(f"{split}: {len(rows)} rows, {len(done)} done")
         n_fail = 0
-        for n_i, i in enumerate(rows):
+        todo = [i for i in rows if f"{ds[i]['video']}|{i}" not in done]
+
+        def decode(i):
+            """CPU side (runs in a thread pool): ffmpeg count + decode for one row."""
             row = ds[i]
-            key = f"{row['video']}|{i}"
-            if key in done:
-                continue
             path = os.path.join(root, row["video"])
+            n = count_decoded_frames(path)
+            plan = frame_plan(row["question_images_index"], row["reasoning_images_index"], n)
+            return row, plan, read_frames_resized(path, plan, args.width, args.height)
+
+        from concurrent.futures import ThreadPoolExecutor
+        pool = ThreadPoolExecutor(max_workers=args.decode_workers)
+        from collections import deque
+        window = deque()  # at most 4 x decode_workers decoded-or-pending clips in memory
+        next_submit = 0
+        for n_i, i in enumerate(todo):
+            while next_submit < len(todo) and len(window) < 4 * args.decode_workers:
+                window.append(pool.submit(decode, todo[next_submit]))
+                next_submit += 1
+            fut = window.popleft()
+            key = f"{ds[i]['video']}|{i}"
             try:
-                n = count_decoded_frames(path)
-                plan = frame_plan(row["question_images_index"], row["reasoning_images_index"], n)
-                frames = read_frames_resized(path, plan, args.width, args.height)
+                row, plan, frames = fut.result()
             except Exception as e:
                 n_fail += 1
-                log(f"  skip {row['video']}: {e}")
+                log(f"  skip {ds[i]['video']}: {e}")
                 continue
             video = torch.stack([torch.from_numpy(frames[f].copy()) for f in plan])  # (17, H, W, 3)
             video = video.permute(3, 0, 1, 2).unsqueeze(0).float().div(127.5).sub(1.0).to(device)
@@ -115,9 +129,10 @@ def encode_videos(args):
             st["keys"].append(key)
             st["plans"].append(plan)
             if (n_i + 1) % 100 == 0:
-                log(f"  {split}: {n_i + 1}/{len(rows)} (failed {n_fail})")
+                log(f"  {split}: {len(done) + n_i + 1}/{len(rows)} (failed {n_fail})")
             if (n_i + 1) % args.save_every == 0:
                 torch.save({**st, "latents": torch.stack(st["latents"])}, out_path)
+        pool.shutdown()
         torch.save({**st, "latents": torch.stack(st["latents"]), "height": args.height, "width": args.width},
                    out_path)
         log(f"{split}: saved {len(st['keys'])} latents ({n_fail} failed) to {out_path}")

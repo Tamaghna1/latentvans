@@ -5,7 +5,7 @@
 #SBATCH --output=/scratch/users/anirban/tamaghnam/latentvans/logs/vdm_pilot_encode_%j.out
 #SBATCH --error=/scratch/users/anirban/tamaghnam/latentvans/logs/vdm_pilot_encode_%j.err
 #SBATCH --time=24:00:00
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=60G
 set -euo pipefail
 
