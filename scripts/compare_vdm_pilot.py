@@ -38,6 +38,8 @@ def parse_args():
 
 
 def arm_name(cfg):
+    if cfg["cond"] == "qwen":
+        return f"qwen:{cfg.get('qwen_layer', 'last')}"
     return f"{cfg['cond']}:{os.path.basename(cfg['vlm_dir'].rstrip('/'))}" if cfg["cond"] in ("latent", "both") \
         else cfg["cond"]
 
@@ -58,7 +60,7 @@ def score_arm(step_dir, wan_dir, batch_size, n_val, base_model, device):
     set_peft_model_state_dict(model, torch.load(os.path.join(step_dir, "wan_lora.pt"), map_location="cpu"))
     model.to(device).eval()
     projector = None
-    if cfg["cond"] in ("latent", "both"):
+    if cfg["cond"] in ("latent", "both", "qwen"):
         projector = LatentProjector(val["latent"].shape[-1], WAN_TEXT_DIM, 1.0).to(device)
         projector.load_state_dict(torch.load(os.path.join(step_dir, "latent_projector.pt"), map_location=device))
         projector.eval()

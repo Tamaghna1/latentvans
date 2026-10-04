@@ -7,6 +7,9 @@ from its context frame, with one of four conditioning arms -- everything else id
   caption   umT5 embedding of the Stage 0 VLM's own generated answer
   latent    the same VLM pass's 4 latent-slot hidden states -> trainable projector -> 4 tokens
   both      caption tokens followed by the latent tokens
+  qwen      the same VLM's hidden states over its own answer tokens (vdm_pilot_qwen_states.py,
+            --qwen_layer last|mid) -> trainable per-token projector: the caption's information
+            without the decode-to-text / umT5 re-encode bottleneck
 
 Inputs are precomputed (vdm_pilot_vlm_outputs.py, vdm_pilot_encode.py): normalized Wan
 VAE latents of a 17-frame clip (frame 0 = context frame, 1..16 = time-lapsed future),
@@ -48,7 +51,8 @@ def log(msg):
 
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--cond", choices=["null", "caption", "latent", "both"], required=True)
+    p.add_argument("--cond", choices=["null", "caption", "latent", "both", "qwen"], required=True)
+    p.add_argument("--qwen_layer", choices=["last", "mid"], default="last", help="--cond qwen: which saved layer")
     p.add_argument("--wan_dir", required=True)
     p.add_argument("--encoded_dir", required=True, help="vdm_pilot_encode.py output dir")
     p.add_argument("--vlm_dir", required=True, help="vdm_pilot_vlm_outputs.py output dir (latents)")
@@ -98,13 +102,18 @@ def load_split(args, split):
     vi = {k: j for j, k in enumerate(vid["keys"])}
     li = {k: j for j, k in enumerate(vlm["keys"])}
     ti = {k: j for j, k in enumerate(txt["keys"])} if txt else None
-    keys = [k for k in vid["keys"] if k in li and (ti is None or k in ti)]
+    qwen = None
+    if getattr(args, "cond", None) == "qwen":
+        qwen = torch.load(os.path.join(args.vlm_dir, f"{split}_qwen_states.pt"))
+        qi = {k: j for j, k in enumerate(qwen["keys"])}
+    keys = [k for k in vid["keys"] if k in li and (ti is None or k in ti) and (qwen is None or k in qi)]
     data = {
         "keys": keys,
         "video": vid["latents"][[vi[k] for k in keys]],
         "latent": vlm["latents"][[li[k] for k in keys]],
         "text": [txt["embeds"][ti[k]] for k in keys] if txt else None,
         "null": txt["null"] if txt else None,
+        "qwen": [qwen[getattr(args, "qwen_layer", "last")][qi[k]] for k in keys] if qwen else None,
     }
     log(f"{split}: {len(keys)} examples (video {len(vid['keys'])}, vlm {len(vlm['keys'])}, "
         f"text {len(txt['keys']) if txt else 'n/a'})")
@@ -124,6 +133,8 @@ def build_cond(args, data, idx, projector, null_emb, device, drop_mask=None):
             s = data["text"][j].to(device).float()
         elif args.cond == "latent":
             s = lat_tok[b]
+        elif args.cond == "qwen":
+            s = projector(data["qwen"][j].to(device).float())
         else:
             s = torch.cat([data["text"][j].to(device).float(), lat_tok[b]], dim=0)
         s = s[:MAX_TEXT_LEN]
@@ -205,7 +216,7 @@ def main():
 
     projector = None
     params = [p_ for p_ in model.parameters() if p_.requires_grad]
-    if args.cond in ("latent", "both"):
+    if args.cond in ("latent", "both", "qwen"):
         texts = train["text"] or [null_emb.cpu()]
         rms = torch.cat([t.float() for t in texts[:500]]).pow(2).mean().sqrt().item()
         projector = LatentProjector(train["latent"].shape[-1], WAN_TEXT_DIM, rms).to(device)

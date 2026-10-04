@@ -11,7 +11,7 @@ set -euo pipefail
 
 # One arm of the VDM conditioning pilot (see train_vdm_pilot.py). Submit via tmux_job.sh:
 #   bash tmux_job.sh vdm_caption COND=caption sbatch train_vdm_pilot.sh
-# COND = null | caption | latent | both. VLM_DIR picks whose latents (default: quad_abs Stage 0).
+# COND = null | caption | latent | both | qwen (QWEN_LAYER=last|mid). VLM_DIR picks whose latents (default: quad_abs Stage 0).
 
 SCRATCH="/scratch/users/anirban/tamaghnam/latentvans"
 CONDA_ROOT="/scratch/users/anirban/tamaghnam/miniconda3"
@@ -19,6 +19,8 @@ ENV="/scratch/users/anirban/tamaghnam/envs/latentvans"
 COND="${COND:?set COND=null|caption|latent|both}"
 VLM_DIR="${VLM_DIR:-$SCRATCH/data/vdm_pilot/vlm_quad_abs}"
 VLM_TAG="$(basename "$VLM_DIR")"
+QWEN_LAYER="${QWEN_LAYER:-last}"            # COND=qwen only: last | mid
+if [[ "$COND" == "qwen" ]]; then VLM_TAG="${VLM_TAG}_${QWEN_LAYER}"; EXTRA_ARGS="${EXTRA_ARGS:-} --qwen_layer $QWEN_LAYER"; fi
 OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/checkpoints/vdm_pilot/${COND}_${VLM_TAG}}"
 MAX_STEPS="${MAX_STEPS:-3000}"
 WANDB_PROJECT="${WANDB_PROJECT:-latentvans-vdm-pilot}"
