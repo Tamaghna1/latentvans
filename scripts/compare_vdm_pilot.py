@@ -10,7 +10,13 @@ draws and noise levels across arms, and for each pair of arms reports:
   frac_a_better    share of clips where arm a has the lower loss
   rel_diff         mean_diff / mean loss of b
 
-A difference whose CI excludes 0 is a real difference on this val set. Per-clip losses
+A difference whose CI excludes 0 is a real difference on this val set.
+
+Shuffled-conditioning control (added 2026-10-06): every non-null arm is also scored with
+the conditioning of a DIFFERENT clip (clip j gets clip j+1's caption / states / latents;
+same video, same noise), reported as "<arm>:shuffled". A learned projector can lower the
+loss with content-independent "prompt" tokens that adapt Wan to this setting; only the
+gap between an arm and its shuffled version measures per-clip information. Per-clip losses
 are saved to <output_dir>/per_clip_losses.pt for later slicing (e.g. by question type).
 """
 import argparse
@@ -70,18 +76,23 @@ def score_arm(step_dir, wan_dir, batch_size, n_val, base_model, device):
     patch = tuple(model.config.patch_size)
     n = min(n_val or len(val["keys"]), len(val["keys"]))
     losses = torch.zeros(n, len(EVAL_SIGMAS))
+    shuffled = torch.zeros(n, len(EVAL_SIGMAS)) if cfg["cond"] != "null" else None
     for start in range(0, n, batch_size):
         idx = list(range(start, min(start + batch_size, n)))
         x0 = val["video"][idx].to(device).float()
         cond = build_cond(args, val, idx, projector, null_emb, device)
+        cond_shuf = (build_cond(args, val, [(j + 1) % n for j in idx], projector, null_emb, device)
+                     if shuffled is not None else None)
         for si, s in enumerate(EVAL_SIGMAS):
             gens = [torch.Generator(device="cpu").manual_seed(10_000 * j + int(s * 100)) for j in idx]
             noise = torch.stack([torch.randn(x0.shape[1:], generator=g) for g in gens]).to(device)
             sigma = torch.full((len(idx),), s, device=device)
             losses[idx, si] = flow_loss(model, x0, sigma, noise, cond, patch).cpu()
+            if cond_shuf is not None:
+                shuffled[idx, si] = flow_loss(model, x0, sigma, noise, cond_shuf, patch).cpu()
         if (start // batch_size) % 20 == 0:
             log(f"  {arm_name(cfg)}: {start + len(idx)}/{n}")
-    return arm_name(cfg), val["keys"][:n], losses
+    return arm_name(cfg), val["keys"][:n], losses, shuffled
 
 
 def paired(a, b, n_boot=10_000, seed=0):
@@ -103,10 +114,15 @@ def main():
     base.requires_grad_(False)
     per_arm, keys = {}, None
     for d in args.arm_dirs:
-        name, k, losses = score_arm(d, args.wan_dir, args.batch_size, args.n_val, base, device)
+        name, k, losses, shuffled = score_arm(d, args.wan_dir, args.batch_size, args.n_val, base, device)
         if keys is not None and k != keys:
             sys.exit(f"val clip order differs for {d}; cannot pair")
         keys, per_arm[name] = k, losses
+        if shuffled is not None:
+            per_arm[f"{name}:shuffled"] = shuffled
+            r = paired(losses.mean(1), shuffled.mean(1))
+            log(f"{name}: real vs shuffled conditioning diff={r['mean_diff']:+.5f} "
+                f"CI95=[{r['ci95'][0]:+.5f},{r['ci95'][1]:+.5f}] real better on {100 * r['frac_a_better']:.1f}% of clips")
         log(f"{name}: mean val loss {losses.mean():.5f}  per sigma "
             + " ".join(f"{s}:{v:.4f}" for s, v in zip(EVAL_SIGMAS, losses.mean(0).tolist())))
     torch.save({"keys": keys, "sigmas": EVAL_SIGMAS, "losses": per_arm}, os.path.join(args.output_dir, "per_clip_losses.pt"))
@@ -114,7 +130,9 @@ def main():
     summary = {"means": {n: l.mean().item() for n, l in per_arm.items()}, "pairs": {}}
     rows = []
     for a, b in itertools.permutations(per_arm, 2):
-        if a < b or "null" in (a, b):
+        own_shuffle = b == f"{a}:shuffled"
+        both_real = ":shuffled" not in a and ":shuffled" not in b
+        if own_shuffle or (both_real and (a < b or "null" in (a, b))) or (b.startswith("null") and ":shuffled" in a):
             r = paired(per_arm[a].mean(1), per_arm[b].mean(1))
             summary["pairs"][f"{a} vs {b}"] = r
             rows.append([a, b, r["mean_diff"], r["ci95"][0], r["ci95"][1], r["frac_a_better"], r["rel_diff"]])

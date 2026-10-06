@@ -319,6 +319,7 @@ def main():
         if projector is None or train["text"] is None:
             sys.exit("--distill_steps needs a projector arm (qwen/latent) and caption embeddings")
         distill_bridge(args, model, projector, train, val, null_emb, device, patch, record)
+        save(0)  # distilled projector + untouched (zero-init) LoRA: the "base Wan + bridge" state
     ev = evaluate(args, model, projector, val, null_emb, device, patch)
     log(f"[eval] step 0: " + " ".join(f"{k}={v:.4f}" for k, v in ev.items()))
     record(ev, 0)
