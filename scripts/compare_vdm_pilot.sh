@@ -28,6 +28,6 @@ export LD_LIBRARY_PATH="$SITE_PACKAGES/nvidia/nccl/lib:$SITE_PACKAGES/torch/lib:
 
 python "$SCRATCH/scripts/compare_vdm_pilot.py" --arm_dirs $ARM_DIRS \
     --wan_dir "$SCRATCH/checkpoints/Wan2.1-T2V-1.3B-Diffusers-bf16" \
-    --output_dir "$SCRATCH/checkpoints/vdm_pilot/comparison" \
+    --output_dir "$SCRATCH/checkpoints/vdm_pilot/${COMPARE_NAME:-comparison_${SLURM_JOB_ID:-local}}" \
     ${WANDB_PROJECT:+--wandb_project "$WANDB_PROJECT"}
 echo "Done: $(date)"

@@ -50,6 +50,8 @@ def arm_name(cfg):
         name = f"{cfg['cond']}:{os.path.basename(cfg['vlm_dir'].rstrip('/'))}"
     else:
         name = cfg["cond"]
+    if cfg.get("text_tag", "caption") != "caption" and cfg["cond"] in ("caption", "both"):
+        name += f":text-{cfg['text_tag']}"
     return name + (f":seed{cfg['seed']}" if cfg.get("seed", 0) else "")
 
 

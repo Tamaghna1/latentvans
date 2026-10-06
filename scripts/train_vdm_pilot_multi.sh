@@ -19,7 +19,8 @@ set -uo pipefail
 #       bash tmux_job.sh vdm_qwen_distill sbatch --gres=gpu:2 train_vdm_pilot_multi.sh
 # The account allows at most 2 GPUs per job.
 #
-# ARMS entries are cond:qwen_layer:seed (qwen_layer only for cond=qwen). Request as many GPUs
+# ARMS entries are cond:qwen_layer:seed[:text_tag] (qwen_layer only for cond=qwen; text_tag picks
+# encoded/{split}_text_<tag>.pt for caption/both arms, default "caption"). Request as many GPUs
 # as arms. Partition list: a100 (80 GB), ada (ADA6000 48 GB), long (A6000 48 GB) -- Slurm
 # starts the job wherever GPUs are free first; --mem=80G fits all three caps.
 
@@ -44,10 +45,11 @@ export LD_LIBRARY_PATH="$SITE_PACKAGES/nvidia/nccl/lib:$SITE_PACKAGES/torch/lib:
 IFS=',' read -ra GPUS <<< "${CUDA_VISIBLE_DEVICES:-0}"
 i=0; pids=()
 for arm in $ARMS; do
-    IFS=':' read -r cond layer seed <<< "$arm"
+    IFS=':' read -r cond layer seed texttag <<< "$arm"
     seed="${seed:-0}"
     tag="${cond}_$(basename "$VLM_DIR")"
     extra=(--seed "$seed")
+    if [[ -n "$texttag" && "$texttag" != "caption" ]]; then tag="${tag}_text-${texttag}"; extra+=(--text_tag "$texttag"); fi
     if [[ "$cond" == "qwen" ]]; then tag="${tag}_${layer:-last}"; extra+=(--qwen_layer "${layer:-last}"); fi
     [[ "$seed" != "0" ]] && tag="${tag}_seed${seed}"
     tag="${tag}${TAG_SUFFIX}"
