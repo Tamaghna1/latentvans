@@ -21,6 +21,15 @@ context frame) is kept clean with per-token timestep 0 -- Wan's transformer take
 (batch, seq_len) timestep -- and excluded from the loss, the same prefix-conditioning
 VANS uses. Conditioning sequences are zero-padded to 512 tokens like WanPipeline.
 
+Bridge distillation (--distill_steps N, for cond qwen/latent; added 2026-10-06): the first
+pilot showed every arm with a freshly initialized projector starts far worse than null and
+spends the whole run recovering to null -- the 0.5%-of-loss conditioning signal is too weak
+to train a bridge from scratch on 6k clips. With distillation, the projector is first
+trained alone (LoRA off, Wan frozen) so that Wan's velocity prediction from the projected
+states matches its prediction from the umT5 caption embedding of the same example, on the
+same noisy input -- a dense signal, and a fair start since both carry the same answer.
+The usual LoRA + flow-loss training then runs for --max_steps as in every other arm.
+
 Metric: held-out flow loss on a fixed set of validation clips at a fixed grid of noise
 levels with fixed noise (seeded per clip), so numbers are directly comparable across
 arms and steps. Lower = the conditioning carries more information about the real future.
@@ -72,6 +81,11 @@ def parse_args():
     p.add_argument("--save_every", type=int, default=1000)
     p.add_argument("--log_every", type=int, default=10)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--distill_steps", type=int, default=0,
+                   help="cond qwen/latent: projector-only distillation steps toward the caption-conditioned "
+                        "prediction before normal training (0 = off, the original pilot)")
+    p.add_argument("--distill_lr", type=float, default=3e-4)
+    p.add_argument("--distill_eval_every", type=int, default=500)
     p.add_argument("--wandb_project", default=None)
     p.add_argument("--wandb_run_name", default=None)
     return p.parse_args()
@@ -154,11 +168,15 @@ def flow_inputs(x0, sigma, noise, patch):
     return xt, t
 
 
+def predict(model, xt, t, cond):
+    with torch.autocast("cuda", dtype=torch.bfloat16):
+        return model(hidden_states=xt.to(torch.bfloat16), timestep=t, encoder_hidden_states=cond.to(torch.bfloat16),
+                     return_dict=False)[0]
+
+
 def flow_loss(model, x0, sigma, noise, cond, patch):
     xt, t = flow_inputs(x0, sigma, noise, patch)
-    with torch.autocast("cuda", dtype=torch.bfloat16):
-        pred = model(hidden_states=xt.to(torch.bfloat16), timestep=t, encoder_hidden_states=cond.to(torch.bfloat16),
-                     return_dict=False)[0]
+    pred = predict(model, xt, t, cond)
     target = noise - x0
     return F.mse_loss(pred.float()[:, :, 1:], target[:, :, 1:], reduction="none").mean(dim=(1, 2, 3, 4))
 
@@ -185,6 +203,39 @@ def evaluate(args, model, projector, val, null_emb, device, patch):
     out = {f"val_loss_s{s}": sum(v) / len(v) for s, v in per_sigma.items()}
     out["val_loss"] = sum(out.values()) / len(out)
     return out
+
+
+def distill_bridge(args, model, projector, train, val, null_emb, device, patch, record):
+    """Projector-only phase: match Wan's caption-conditioned velocity prediction (see module docstring)."""
+    teacher_args = argparse.Namespace(**{**vars(args), "cond": "caption"})
+    opt = torch.optim.AdamW(projector.parameters(), lr=args.distill_lr, weight_decay=args.weight_decay)
+    model.disable_adapters()
+    n_train = len(train["keys"])
+    t0 = time.time()
+    for step in range(1, args.distill_steps + 1):
+        idx = random.sample(range(n_train), args.batch_size)
+        x0 = train["video"][idx].to(device).float()
+        u = torch.rand(len(idx), device=device)
+        sigma = args.flow_shift * u / (1 + (args.flow_shift - 1) * u)
+        xt, t = flow_inputs(x0, sigma, torch.randn_like(x0), patch)
+        with torch.no_grad():
+            teacher = predict(model, xt, t, build_cond(teacher_args, train, idx, None, null_emb, device)).float()
+        student = predict(model, xt, t, build_cond(args, train, idx, projector, null_emb, device)).float()
+        loss = F.mse_loss(student[:, :, 1:], teacher[:, :, 1:])
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        gn = torch.nn.utils.clip_grad_norm_(projector.parameters(), 1.0)
+        opt.step()
+        if step % 50 == 0:
+            dt = (time.time() - t0) / 50
+            t0 = time.time()
+            log(f"distill {step}/{args.distill_steps} match_loss={loss.item():.6f} grad_norm={gn.item():.3f} ({dt:.2f}s/step)")
+            record({"distill/match_loss": loss.item(), "distill/grad_norm": gn.item()}, step, distill=True)
+        if step % args.distill_eval_every == 0 or step == args.distill_steps:
+            ev = evaluate(args, model, projector, val, null_emb, device, patch)
+            log(f"[distill eval] step {step}: " + " ".join(f"{k}={v:.4f}" for k, v in ev.items()))
+            record({f"distill/{k}": v for k, v in ev.items()}, step, distill=True)
+    model.enable_adapters()
 
 
 def main():
@@ -240,13 +291,16 @@ def main():
 
     metrics_path = os.path.join(args.output_dir, "metrics.jsonl")
 
-    def record(row, step):
+    def record(row, step, distill=False):
+        """metrics.jsonl keeps the training step (distill rows are tagged); W&B needs one increasing
+        step axis, so training steps are shifted past the distillation phase there."""
         with open(metrics_path, "a") as f:
-            f.write(json.dumps({"step": step, **row, "time": time.time()}) + "\n")
+            f.write(json.dumps({"step": step, "phase": "distill" if distill else "train", **row,
+                                "time": time.time()}) + "\n")
         nonlocal wandb_run
         if wandb_run is not None:
             try:
-                wandb_run.log(row, step=step)
+                wandb_run.log(row, step=step if distill else step + args.distill_steps + 1)
             except Exception as e:
                 log(f"WARNING: wandb.log failed ({e}); disabling W&B")
                 wandb_run = None
@@ -261,6 +315,10 @@ def main():
         json.dump(vars(args), open(os.path.join(d, "config.json"), "w"), indent=2)
         log(f"saved {d}")
 
+    if args.distill_steps:
+        if projector is None or train["text"] is None:
+            sys.exit("--distill_steps needs a projector arm (qwen/latent) and caption embeddings")
+        distill_bridge(args, model, projector, train, val, null_emb, device, patch, record)
     ev = evaluate(args, model, projector, val, null_emb, device, patch)
     log(f"[eval] step 0: " + " ".join(f"{k}={v:.4f}" for k, v in ev.items()))
     record(ev, 0)

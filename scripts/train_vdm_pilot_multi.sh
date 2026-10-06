@@ -14,7 +14,10 @@ set -uo pipefail
 # would, with its own output dir, log file and W&B run.
 #
 #   ARMS="qwen:last:0 qwen:mid:0" bash tmux_job.sh vdm_qwen sbatch --gres=gpu:2 train_vdm_pilot_multi.sh
-#   ARMS="caption::1 null::1 latent::1 both::1" bash tmux_job.sh vdm_seed1 sbatch --gres=gpu:4 train_vdm_pilot_multi.sh
+#   ARMS="caption::1 null::1" bash tmux_job.sh vdm_seed1 sbatch --gres=gpu:2 train_vdm_pilot_multi.sh
+#   ARMS="qwen:mid:0 qwen:last:0" EXTRA_ARGS="--distill_steps 2000" TAG_SUFFIX=_distill \
+#       bash tmux_job.sh vdm_qwen_distill sbatch --gres=gpu:2 train_vdm_pilot_multi.sh
+# The account allows at most 2 GPUs per job.
 #
 # ARMS entries are cond:qwen_layer:seed (qwen_layer only for cond=qwen). Request as many GPUs
 # as arms. Partition list: a100 (80 GB), ada (ADA6000 48 GB), long (A6000 48 GB) -- Slurm
@@ -27,6 +30,8 @@ ARMS="${ARMS:?set ARMS, e.g. ARMS=\"qwen:last:0 qwen:mid:0\"}"
 VLM_DIR="${VLM_DIR:-$SCRATCH/data/vdm_pilot/vlm_quad_abs}"
 MAX_STEPS="${MAX_STEPS:-3000}"
 WANDB_PROJECT="${WANDB_PROJECT:-latentvans-vdm-pilot}"
+EXTRA_ARGS="${EXTRA_ARGS:-}"      # passed to every arm, e.g. "--distill_steps 2000"
+TAG_SUFFIX="${TAG_SUFFIX:-}"      # appended to every arm's output/W&B name, e.g. "_distill"
 
 echo "Job ID: ${SLURM_JOB_ID:-none}  Node: $(hostname)  Partition: ${SLURM_JOB_PARTITION:-?}  Start: $(date)"
 echo "ARMS=$ARMS"
@@ -45,6 +50,7 @@ for arm in $ARMS; do
     extra=(--seed "$seed")
     if [[ "$cond" == "qwen" ]]; then tag="${tag}_${layer:-last}"; extra+=(--qwen_layer "${layer:-last}"); fi
     [[ "$seed" != "0" ]] && tag="${tag}_seed${seed}"
+    tag="${tag}${TAG_SUFFIX}"
     gpu="${GPUS[$i]:-}"
     if [[ -z "$gpu" ]]; then echo "more arms than GPUs (${#GPUS[@]}); skipping $arm"; continue; fi
     log="$SCRATCH/logs/vdm_multi_${SLURM_JOB_ID:-local}_${tag}.log"
@@ -54,7 +60,7 @@ for arm in $ARMS; do
         --encoded_dir "$SCRATCH/data/vdm_pilot/encoded" --vlm_dir "$VLM_DIR" \
         --output_dir "$SCRATCH/checkpoints/vdm_pilot/$tag" --max_steps "$MAX_STEPS" \
         ${WANDB_PROJECT:+--wandb_project "$WANDB_PROJECT"} --wandb_run_name "vdm-$tag" \
-        "${extra[@]}" > "$log" 2>&1 &
+        "${extra[@]}" $EXTRA_ARGS > "$log" 2>&1 &
     pids+=($!); i=$((i + 1))
 done
 status=0
