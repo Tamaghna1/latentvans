@@ -12,8 +12,9 @@
 #   window "log"    tail -F of the job's stdout (scrollback kept at 200k lines)
 #   window "err"    tail -F of the job's stderr
 #   window "status" squeue/sacct for the job, refreshed every 60 s
-# The session stays after the job ends, so the full output can still be read with
-# `tmux a -t <session>`; the log files under logs/ remain the permanent record.
+# Viewers only: nothing here does any work (cluster policy: no jobs on the login node). When the
+# job ends, the status loop stops itself and the two tails, so a finished session keeps its
+# scrollback but runs no commands. The log files under logs/ remain the permanent record.
 set -euo pipefail
 
 make_session() {
@@ -38,7 +39,7 @@ make_session() {
     tmux send-keys -t "$session:err" "tail -n +1 -F '$err'" Enter
     tmux new-window -t "$session" -n status
     tmux send-keys -t "$session:status" \
-        "while true; do clear; date; squeue -j $jobid 2>/dev/null; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList; sleep 60; done" Enter
+        "while squeue -h -j $jobid 2>/dev/null | grep -q .; do clear; date; squeue -j $jobid; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList; sleep 60; done; sleep 30; tmux send-keys -t og C-c; tmux send-keys -t rr C-c; clear; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList" Enter
     tmux select-window -t "$session:log"
     echo "job $jobid -> tmux session $session (attach: tmux a -t $session)"
 }
