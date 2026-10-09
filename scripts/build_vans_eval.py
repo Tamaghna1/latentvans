@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import zlib
 
 import pandas as pd
 
@@ -78,6 +79,8 @@ def main():
     p.add_argument("--timeout", type=int, default=300)
     p.add_argument("--split", choices=["eval", "train"], default="eval")
     p.add_argument("--rows_per_video", type=int, default=1, help="--split train: max rows per source video")
+    p.add_argument("--shard", type=int, default=0, help="parallel builders: this one takes videos with crc32(vid) %% num_shards == shard")
+    p.add_argument("--num_shards", type=int, default=1)
     args = p.parse_args()
 
     clips = os.path.join(args.out_dir, "clips")
@@ -107,10 +110,13 @@ def main():
         rng = random.Random(args.seed)
         groups = sorted(df.groupby("vid").groups.items())
         rng.shuffle(groups)
-        n_ok = sum(1 for r in done.values() if r["source"] == source)
+        mine = lambda v: zlib.crc32(v.encode()) % args.num_shards == args.shard  # noqa: E731
+        groups = [g for g in groups if mine(g[0])]
+        quota = args.per_source // args.num_shards + (args.shard < args.per_source % args.num_shards)
+        n_ok = sum(1 for r in done.values() if r["source"] == source and mine(r["vid"]))
         log(f"{source}: {len(groups)} {subset} videos, {n_ok} already built")
         for vid, idx in groups:
-            if n_ok >= args.per_source:
+            if n_ok >= quota:
                 break
             if args.split == "eval":
                 picks = [sorted(idx)[rng.randrange(len(idx))]]  # one row per held-out video
@@ -118,7 +124,7 @@ def main():
                 picks = sorted(idx)
                 rng.shuffle(picks)
             for j in picks[:args.rows_per_video]:
-                if n_ok >= args.per_source:
+                if n_ok >= quota:
                     break
                 row = df.loc[j]
                 sid = f"{source}_{vid}_{row.input_id}"
