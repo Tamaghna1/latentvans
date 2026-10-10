@@ -3,7 +3,7 @@
 #SBATCH --partition=ada
 #SBATCH --output=/scratch/users/anirban/tamaghnam/latentvans/logs/vans_coconut_%j.out
 #SBATCH --error=/scratch/users/anirban/tamaghnam/latentvans/logs/vans_coconut_%j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=20:00:00
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
