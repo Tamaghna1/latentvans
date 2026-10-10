@@ -94,6 +94,12 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
   - Then: generate + score each arm on the 400-sample benchmark with VANS VLM captions and with GT
     captions (W&B `latentvans-vans-eval`). Expected done ~Sun 11 Oct.
 
+## Cluster notes
+
+- cn1 (long) has a dead GPU (PCI 0000:CD:00.0, nvidia-smi "Unknown Error"); cn7 (ada) GPUs
+  intermittently "busy or unavailable". Jobs exclude cn1,cn7; `scripts/gpu_probe.sh` checks a node.
+- Our account cannot use h200 (needs h200_qos). Limits: 2 running / 4 submitted jobs, 2 GPUs per job.
+
 ## Next steps
 
 0. **Top priority: test the core claim in the VANS setting.** The VDM pilot (experiment 3) tested
@@ -106,6 +112,23 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
    to the umT5 caption embedding), trained end to end with the VDM loss (projector, query tokens and
    Qwen LoRA all receive gradients). Evaluate both on the rebuilt benchmark with VANS VLM captions and
    with GT captions. This comes before Joint-GRPO.
+0b. **Coconut-style continuous reasoning** (idea from Coconut, Hao et al. 2024, arXiv 2412.06769;
+   `scripts/vans_coconut.py`). Stage 0 failed because the latent had a hand-made target and learned
+   "describe the present"; Coconut gives latent thoughts no direct target (only the loss on what comes
+   after) and uses a curriculum that gradually replaces written reasoning with continuous thoughts.
+   (a) Captions first, since caption quality is the measured bottleneck: four arms from VANS's VLM,
+   same data and steps: `cot` (full written reasoning), `nocot`, `coconut` (curriculum, c=2 thoughts
+   per replaced sentence, 4 stages, then no written reasoning), `pause` (same slots, learned pause
+   vector, no recurrence: controls for extra compute). Metric: BLEU / ROUGE-L of greedy captions on the
+   400-sample benchmark, plus the untrained VANS VLM under the same decoding.
+   Findings while building it (job 66838): the released VANS VLM has 2.8-4.1 nats/token CE on our
+   training rows' GT think+caption even in its own text format (our hand-built embedding path matches
+   Qwen's native forward to ~0.03), consistent with its low ROUGE-L here. Qwen's last-layer hidden RMS
+   is ~3.9 vs input-embedding RMS ~0.0225, so thoughts are rescaled to embedding RMS before being fed
+   back (raw feedback exploded gradients). Runs: 4 arms x 5 stages x 500 steps (grad accum 4), queued
+   as job slots free; W&B `latentvans-coconut`. Watch: coconut loss must recover within each stage.
+   (b) If (a) helps: feed the final thoughts to the video model (as in item 0) while progressively
+   dropping caption words, to test whether latents can replace the caption.
 1. Inspect generated videos from `vans` and `pilot_*` to explain the FVD gap; fix the FVD protocol
    (frame count / resampling) so arms are comparable, then rescore all five arms.
 2. Check why VANS's captions reach ROUGE-L 0.21 here vs 0.36 in the paper (decoding settings,
