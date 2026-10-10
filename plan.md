@@ -100,6 +100,21 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
   intermittently "busy or unavailable". Jobs exclude cn1,cn7; `scripts/gpu_probe.sh` checks a node.
 - Our account cannot use h200 (needs h200_qos). Limits: 2 running / 4 submitted jobs, 2 GPUs per job.
 
+## Possibilities (ideas to try)
+
+Every idea raised in discussion goes here with where it came from, its status, and how we would test it.
+Status: `running` / `queued` / `candidate` / `done` / `dropped`.
+
+| # | Idea | Source | Status | How to test / notes |
+|---|---|---|---|---|
+| P1 | Reproduce VANS on its benchmark and set up Joint-GRPO as in the paper | user, 2026-10-08 | done (eval), code ready (RL) | Experiments 4–5. Paper numbers did not reproduce on our rebuilt split; SFT → Joint-GRPO still to run. |
+| P2 | Test caption + latent vs caption in the real VANS setting (not the easier pilot) | user, 2026-10-10 | running | Next-steps item 0; jobs 66740/66741, then benchmark with VANS and GT captions. |
+| P3 | Ask the VANS authors for SFT checkpoints, training code, test split | user, 2026-10-10 | candidate (email drafted) | Would let Joint-GRPO start exactly as in the paper and settle the reproduction gap. |
+| P4 | Coconut continuous thoughts (arXiv 2412.06769): replace written reasoning with latent thoughts via a curriculum, no direct latent target | user, 2026-10-10 | running/queued | Next-steps item 0b: arms cot / nocot / coconut / pause, caption BLEU / ROUGE-L. Then (b): feed thoughts to the video model while dropping caption words. |
+| P5 | ReaLVR diagnostic (arXiv 2609.34563): is the latent actually used? | user, 2026-10-10 | candidate | After P2: swap test (other sample's latent, same caption → does the video / CLIP-V change?) and sensitivity test (latent from another segment of the same video → does the latent move?). ~1 GPU-hour. |
+| P6 | ReaLVR contrastive evidence loss for the latent | user, 2026-10-10 | candidate | Margin loss [m − (sim(z, f(true next clip)) − max sim(z, f(negatives)))]₊, weight ~0.2, added to the VDM loss. Hard negatives = other segments of the same video incl. the input segment, so "describe the present" cannot win (Stage 0's failure). Run if P5 shows the latent is decorative or weak. |
+| P7 | If latents enter Joint-GRPO, give them a gradient path | from P6 discussion (ReaLVR's LVR baseline) | candidate | LVR's GRPO treated latents as fixed context and they went unused; use the VDM loss or an auxiliary loss during RL. |
+
 ## Next steps
 
 0. **Top priority: test the core claim in the VANS setting.** The VDM pilot (experiment 3) tested
