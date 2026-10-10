@@ -82,11 +82,30 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
 
 ## In progress
 
-- Training data for SFT/RL from the COIN/YouCook2 `training` subsets (`data/vans_train`):
-  2,255 / 4,000 rows; Slurm job 66505 continues it. The paper's SFT used 100K examples; its RL used 1K.
+- Training data for SFT/RL (`data/vans_train`): **done, 4,000 rows** from the COIN/YouCook2
+  `training` subsets (job 66505). The paper's SFT used 100K examples; its RL used 1K.
+- **Core-claim experiment (next-steps item 0), `scripts/vans_latent_vdm.py`:** latent arm = Qwen copy
+  (from VANS's VLM LoRA) reads video + instruction + answer + 16 learned query tokens; their hidden
+  states -> projector -> appended after the umT5 caption tokens; trained end to end with the VDM loss.
+  Both arms: DiT from released VANS, lr 2e-5 (1e-4 for projector/queries), 4000 steps, same data order,
+  timesteps and noise. Smoke-tested train/generate/score (jobs 66522, 66723).
+  - 66719: pre-encode training clips (ref/target latents + caption embeddings), ~6 h on 2 GPUs.
+  - 66740 (caption arm), 66741 (latent arm): start when 66719 finishes. W&B `latentvans-vans-latent`.
+  - Then: generate + score each arm on the 400-sample benchmark with VANS VLM captions and with GT
+    captions (W&B `latentvans-vans-eval`). Expected done ~Sun 11 Oct.
 
 ## Next steps
 
+0. **Top priority: test the core claim in the VANS setting.** The VDM pilot (experiment 3) tested
+   caption + latent only in an easier setting (1 context frame, same-clip future, LoRA, flow loss,
+   with a weak regression-trained Stage 0 latent), so it does not answer whether a good latent beats
+   a caption. New experiment: two arms trained identically in the VANS setting (6 reference latents,
+   33 frames at 352x640, next-event clips, full DiT, init from the released VANS DiT, our VANS
+   training data, GT captions in training), differing only in conditioning:
+   (a) caption; (b) caption + K latent tokens from Qwen (learnable query tokens -> projector, appended
+   to the umT5 caption embedding), trained end to end with the VDM loss (projector, query tokens and
+   Qwen LoRA all receive gradients). Evaluate both on the rebuilt benchmark with VANS VLM captions and
+   with GT captions. This comes before Joint-GRPO.
 1. Inspect generated videos from `vans` and `pilot_*` to explain the FVD gap; fix the FVD protocol
    (frame count / resampling) so arms are comparable, then rescore all five arms.
 2. Check why VANS's captions reach ROUGE-L 0.21 here vs 0.36 in the paper (decoding settings,
