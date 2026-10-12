@@ -265,6 +265,11 @@ def train(args):
                       os.path.join(d, "latent_vlm_lora.safetensors"))
             torch.save({"query": lq.query.detach().cpu(), "proj": lq.proj.state_dict(),
                         "num_queries": args.num_queries}, os.path.join(d, "latent_head.pt"))
+        # keep only the newest checkpoint: a full DiT is 2.8 GB and the scratch quota is ~100 GB
+        import shutil
+        for old in os.listdir(args.output_dir):
+            if old.startswith("step_") and old != f"step_{step}":
+                shutil.rmtree(os.path.join(args.output_dir, old), ignore_errors=True)
         log(f"saved {d}")
 
     rng = random.Random(args.seed)  # same data order and timesteps for both arms

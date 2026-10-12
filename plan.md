@@ -96,6 +96,11 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
 
 ## Cluster notes
 
+- 2026-10-10 17:03: scratch quota (~100 GB) filled while two runs saved checkpoints; the caption arm
+  (66740, at step ~990), the coconut arm (66843, at step 600) and every job started afterwards died
+  without logs. Freed 9 GB of smoke outputs; latent runs now keep only the newest 2.8 GB DiT
+  checkpoint. Restarted as 67503 (caption), 67504 (latent), 67505 (coconut) on 2026-10-12.
+  Headroom is ~12 GB: check before adding large outputs.
 - cn1 (long) has a dead GPU (PCI 0000:CD:00.0, nvidia-smi "Unknown Error"); cn7 (ada) GPUs
   intermittently "busy or unavailable". Jobs exclude cn1,cn7; `scripts/gpu_probe.sh` checks a node.
 - Our account cannot use h200 (needs h200_qos). Limits: 2 running / 4 submitted jobs, 2 GPUs per job.
