@@ -80,6 +80,30 @@ group 8, beta 0.004, clip 1e-3, lr 5e-5, LoRA r8/a32.
 - Measured speeds: VANS generation ~95 s/video, pilot ~15 s/video, VDM SFT ~20 s/step uncached,
   GRPO stage 1 ~4 min/step at group 8 (~27 h for 800 steps on 2 GPUs).
 
+## Experiment 6: caption vs caption + latent on the VANS benchmark (core claim)
+
+Both arms: DiT from released VANS, fine-tuned 4,000 steps on `data/vans_train` with identical data
+order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400-sample benchmark.
+
+| Arm | Captions | FVD | CLIP-V | CLIP-T | ROUGE-L |
+|---|---|---|---|---|---|
+| released VANS (no fine-tune) | VANS VLM | 1477 | 0.775 | 0.287 | 0.209 |
+| caption arm (fine-tuned) | VANS VLM | 544 | 0.763 | 0.277 | 0.209 |
+| caption arm (fine-tuned) | ground truth | 665 | 0.777 | 0.300 | – |
+| latent arm | VANS VLM | pending (67831) | | | |
+| latent arm | ground truth | pending (67832) | | | |
+
+- The latent tokens' learned gain fell steadily during training (0.075 -> 0.068): the DiT turned the
+  latent down rather than up. Early sign it adds little.
+- Fine-tuning on our 4K rows slightly lowered CLIP-V/T vs the released DiT (0.763 vs 0.775).
+
+## Experiment 7: Coconut continuous reasoning (VLM captions)
+
+- `coconut` arm (67505, 4 stages, 2 thoughts/step): ROUGE-L **0.283**, BLEU@4 0.073 vs released VANS VLM
+  0.209 / 0.032. Needs controls before reading anything into it: untrained VLM through the same eval
+  path (67833) and `nocot` arm trained on the same data (67834). `format_ok=0` only because the
+  checker expects text inside [Think]; answers parse fine.
+
 ## In progress
 
 - Training data for SFT/RL (`data/vans_train`): **done, 4,000 rows** from the COIN/YouCook2
