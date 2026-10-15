@@ -122,10 +122,21 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
 Question: does telling the captioner which objects are where improve its next-event captions, and do
 better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/vans_ground.py`,
 `scripts/vans_ground.sh`; W&B `latentvans-grounding`.
-- Grounding pre-pass: Qwen2.5-VL-3B-Instruct (base) boxes the objects, tools, ingredients and hands in
-  the last input frame at native resolution (the captioner sees 6 frames at 364x644), labels with
-  color/material, boxes on a 0-1000 scale; plus a zoomed crop of the active region (hands and what
-  they touch).
+- Grounding pre-pass (job 68487, done 2026-10-15): on the last input frame, Qwen2.5-VL-3B-Instruct
+  (base) names the objects, tools, food and hands involved (given the user's instruction), then
+  Grounding DINO (base) boxes each name; names without a box scoring >= 0.3 are dropped, which also
+  filters names the VLM invented. Boxes on a 0-1000 scale, plus a zoomed crop of the active region
+  (hands and what they touch). 4.8 objects/frame; ground_think targets keep 2.0 next-step objects
+  per row (17% of rows have none visible). Note: most YouCook clips are 640x360, so the last frame
+  adds little resolution over the captioner's 364x644 video frames; the crop adds tokens on the
+  active region.
+  - Dead ends on the way: asked to box everything itself, Qwen2.5-VL-3B returned generic labels
+    ("object", "tool", "food") with every prompt tried (jobs 68481, 68483), so detection was moved
+    to Grounding DINO. First attempts also failed on a missing ffmpeg in the job PATH and an OOM in
+    the vision tower's batch-wide attention mask on 24 GB GPUs (batch 12 -> 4).
+- Smoke test passed (68491): grounded prompt reproduces VANS's tokenization exactly without the
+  extras; the zoom crop adds 242 image tokens. Training: 68500 (ground_text), 68501 (ground_zoom),
+  68502 (ground_think).
 - Arms, all fine-tuned exactly like `nocot` (VANS VLM LoRA init, same 4,000 rows, order, 2,500 steps,
   lr 5e-5, loss on the answer):
   `ground_text` (object list with boxes added to the prompt), `ground_zoom` (+ the zoomed crop as an
@@ -134,7 +145,7 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
 - Metrics: caption BLEU / ROUGE-L on the 400-sample benchmark with paired bootstrap vs `nocot`; then
   the best arm's captions rendered by the released VANS video model (CLIP-V / CLIP-T / FVD) next to
   VANS's own captions (0.775 CLIP-V), `nocot` captions and GT captions (0.806).
-- Transfer check (runs in parallel): `nocot` captions rendered by the released VANS video model.
+- Transfer check (job 68479, running): `nocot` captions rendered by the released VANS video model.
 
 ## Cluster notes
 
