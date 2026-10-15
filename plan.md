@@ -103,7 +103,10 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
 
 - `coconut` arm (67505, 4 stages, 2 thoughts/step): ROUGE-L **0.283**, BLEU@4 0.073 vs released VANS VLM
   0.209 / 0.032. Needs controls before reading anything into it: untrained VLM through the same eval
-  path (67833: ROUGE-L 0.216, BLEU@4 0.036 -> the eval path is not the cause) and `nocot` arm trained on the same data (67834). `format_ok=0` only because the
+  path (67833: ROUGE-L 0.216, BLEU@4 0.036 -> the eval path is not the cause) and `nocot` arm trained on the same data (67834).
+- **`nocot` result (68308): ROUGE-L 0.276, BLEU@4 0.070** -- almost all of Coconut's gain is fine-tuning
+  on this data. Coconut - nocot = +0.007 ROUGE-L, paired bootstrap 95% CI [-0.000, +0.014]: not
+  significant. `cot` arm (68309) training. `format_ok=0` only because the
   checker expects text inside [Think]; answers parse fine.
 
 ## In progress
