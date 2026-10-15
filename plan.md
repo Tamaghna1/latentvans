@@ -106,7 +106,9 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
   path (67833: ROUGE-L 0.216, BLEU@4 0.036 -> the eval path is not the cause) and `nocot` arm trained on the same data (67834).
 - **`nocot` result (68308): ROUGE-L 0.276, BLEU@4 0.070** -- almost all of Coconut's gain is fine-tuning
   on this data. Coconut - nocot = +0.007 ROUGE-L, paired bootstrap 95% CI [-0.000, +0.014]: not
-  significant. `cot` arm (68309) training. `format_ok=0` only because the
+  significant. **`cot` (68423): ROUGE-L 0.276, BLEU@4 0.067** -- text reasoning = no reasoning
+  (cot - nocot -0.001, CI [-0.010, +0.008]); coconut - cot +0.008, CI [-0.002, +0.017]: not significant.
+  Conclusion: at this scale, reasoning (text or latent) adds nothing beyond fine-tuning. `format_ok=0` only because the
   checker expects text inside [Think]; answers parse fine.
 
 ## In progress
