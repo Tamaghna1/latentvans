@@ -32,7 +32,7 @@ def log(msg):
 
 def last_frame(src, dest):
     """Decode the final second and keep overwriting one file, so it ends as the last decoded frame."""
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-sseof", "-1", "-i", src, "-update", "1", "-q:v", "2", dest],
+    subprocess.run([os.environ.get("FFMPEG", "ffmpeg"), "-v", "error", "-y", "-sseof", "-1", "-i", src, "-update", "1", "-q:v", "2", dest],
                    check=True, capture_output=True)
     return Image.open(dest).convert("RGB")
 
@@ -127,7 +127,7 @@ def main():
             done |= {json.loads(l)["sample_id"] for l in open(f)}
         todo = [r for r in rows if r["sample_id"] not in done]
         log(f"{d}: {len(rows)} rows in shard {args.shard}, {len(todo)} to do")
-        n_obj, t0 = 0, time.time()
+        n_obj, fails, t0 = 0, 0, time.time()
         for i in range(0, len(todo), args.batch_size):
             batch, imgs = [], []
             for r in todo[i:i + args.batch_size]:
@@ -135,8 +135,12 @@ def main():
                     imgs.append(last_frame(os.path.join(d, r["input_video"]),
                                            os.path.join(gdir, f"{r['sample_id']}_last.jpg")))
                     batch.append(r)
+                    fails = 0
                 except Exception as e:
+                    fails += 1
                     log(f"WARNING: {r['sample_id']}: last frame failed ({str(e)[-200:]})")
+                    if fails >= 20:
+                        raise RuntimeError("20 consecutive frame-extraction failures") from e
             if not batch:
                 continue
             msgs = [[{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": PROMPT}]}]] * len(batch)

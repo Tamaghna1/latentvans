@@ -16,7 +16,7 @@ set -euo pipefail
 #   MODE=smoke                                      3 train steps + 3 eval rows for every arm
 T=/scratch/users/anirban/tamaghnam
 S=$T/latentvans
-export HF_HOME=$T/hf_cache PYTHONPATH=$S/scripts
+export HF_HOME=$T/hf_cache PYTHONPATH=$S/scripts FFMPEG=$T/envs/latentvans/bin/ffmpeg
 PY=$T/envs/vans/bin/python
 COMMON="--vans_code $S/code/VANS --vans_dir $S/checkpoints/VANS --qwen_dir $S/checkpoints/Qwen2.5-VL-3B-Instruct"
 NG=$(nvidia-smi -L | wc -l)
