@@ -9,6 +9,12 @@ Video next-event prediction (VANS setting): a VLM (Qwen2.5-VL-3B) reasons about 
 question, and a VDM (Wan2.1-T2V-1.3B) generates the answer video. Beat VANS (arXiv 2511.16669) on
 its benchmark.
 
+**Objective changed 2026-10-15 (user decision).** The original method (latent from the VLM into the
+video model, and latent reasoning in the VLM) is dropped: four tests found no gain (experiments 2, 3,
+6, 7). Caption quality is the measured lever, so the new objective is better next-event captions
+through visual grounding with bounding boxes (experiment 8), scored on the VANS benchmark for both
+captions and videos.
+
 ## Experiments so far
 
 ### 1. Stage 0 v1: latent grounding SFT (Sep 2026)
@@ -111,19 +117,24 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
   Conclusion: at this scale, reasoning (text or latent) adds nothing beyond fine-tuning. `format_ok=0` only because the
   checker expects text inside [Think]; answers parse fine.
 
-## In progress
+## Experiment 8: visually grounded captions with bounding boxes (in progress, from 2026-10-15)
 
-- Training data for SFT/RL (`data/vans_train`): **done, 4,000 rows** from the COIN/YouCook2
-  `training` subsets (job 66505). The paper's SFT used 100K examples; its RL used 1K.
-- **Core-claim experiment (next-steps item 0), `scripts/vans_latent_vdm.py`:** latent arm = Qwen copy
-  (from VANS's VLM LoRA) reads video + instruction + answer + 16 learned query tokens; their hidden
-  states -> projector -> appended after the umT5 caption tokens; trained end to end with the VDM loss.
-  Both arms: DiT from released VANS, lr 2e-5 (1e-4 for projector/queries), 4000 steps, same data order,
-  timesteps and noise. Smoke-tested train/generate/score (jobs 66522, 66723).
-  - 66719: pre-encode training clips (ref/target latents + caption embeddings), ~6 h on 2 GPUs.
-  - 66740 (caption arm), 66741 (latent arm): start when 66719 finishes. W&B `latentvans-vans-latent`.
-  - Then: generate + score each arm on the 400-sample benchmark with VANS VLM captions and with GT
-    captions (W&B `latentvans-vans-eval`). Expected done ~Sun 11 Oct.
+Question: does telling the captioner which objects are where improve its next-event captions, and do
+better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/vans_ground.py`,
+`scripts/vans_ground.sh`; W&B `latentvans-grounding`.
+- Grounding pre-pass: Qwen2.5-VL-3B-Instruct (base) boxes the objects, tools, ingredients and hands in
+  the last input frame at native resolution (the captioner sees 6 frames at 364x644), labels with
+  color/material, boxes on a 0-1000 scale; plus a zoomed crop of the active region (hands and what
+  they touch).
+- Arms, all fine-tuned exactly like `nocot` (VANS VLM LoRA init, same 4,000 rows, order, 2,500 steps,
+  lr 5e-5, loss on the answer):
+  `ground_text` (object list with boxes added to the prompt), `ground_zoom` (+ the zoomed crop as an
+  image), `ground_think` (model first writes the objects the next step will use, with boxes, then the
+  caption; no detector at test time).
+- Metrics: caption BLEU / ROUGE-L on the 400-sample benchmark with paired bootstrap vs `nocot`; then
+  the best arm's captions rendered by the released VANS video model (CLIP-V / CLIP-T / FVD) next to
+  VANS's own captions (0.775 CLIP-V), `nocot` captions and GT captions (0.806).
+- Transfer check (runs in parallel): `nocot` captions rendered by the released VANS video model.
 
 ## Cluster notes
 
@@ -144,52 +155,25 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | # | Idea | Source | Status | How to test / notes |
 |---|---|---|---|---|
 | P1 | Reproduce VANS on its benchmark and set up Joint-GRPO as in the paper | user, 2026-10-08 | done (eval), code ready (RL) | Experiments 4–5. Paper numbers did not reproduce on our rebuilt split; SFT → Joint-GRPO still to run. |
-| P2 | Test caption + latent vs caption in the real VANS setting (not the easier pilot) | user, 2026-10-10 | running | Next-steps item 0; jobs 66740/66741, then benchmark with VANS and GT captions. |
+| P2 | Test caption + latent vs caption in the real VANS setting (not the easier pilot) | user, 2026-10-10 | done: no gain | Experiment 6: CLIP-V 0.760 vs 0.763 (VANS captions), 0.778 vs 0.777 (GT captions). |
 | P3 | Ask the VANS authors for SFT checkpoints, training code, test split | user, 2026-10-10 | candidate (email drafted) | Would let Joint-GRPO start exactly as in the paper and settle the reproduction gap. |
-| P4 | Coconut continuous thoughts (arXiv 2412.06769): replace written reasoning with latent thoughts via a curriculum, no direct latent target | user, 2026-10-10 | running/queued | Next-steps item 0b: arms cot / nocot / coconut / pause, caption BLEU / ROUGE-L. Then (b): feed thoughts to the video model while dropping caption words. |
-| P5 | ReaLVR diagnostic (arXiv 2609.34563): is the latent actually used? | user, 2026-10-10 | candidate | After P2: swap test (other sample's latent, same caption → does the video / CLIP-V change?) and sensitivity test (latent from another segment of the same video → does the latent move?). ~1 GPU-hour. |
-| P6 | ReaLVR contrastive evidence loss for the latent | user, 2026-10-10 | candidate | Margin loss [m − (sim(z, f(true next clip)) − max sim(z, f(negatives)))]₊, weight ~0.2, added to the VDM loss. Hard negatives = other segments of the same video incl. the input segment, so "describe the present" cannot win (Stage 0's failure). Run if P5 shows the latent is decorative or weak. |
-| P7 | If latents enter Joint-GRPO, give them a gradient path | from P6 discussion (ReaLVR's LVR baseline) | candidate | LVR's GRPO treated latents as fixed context and they went unused; use the VDM loss or an auxiliary loss during RL. |
+| P4 | Coconut continuous thoughts (arXiv 2412.06769): replace written reasoning with latent thoughts via a curriculum, no direct latent target | user, 2026-10-10 | done: no gain beyond fine-tuning; dropped 2026-10-15 | Next-steps item 0b: arms cot / nocot / coconut / pause, caption BLEU / ROUGE-L. Then (b): feed thoughts to the video model while dropping caption words. |
+| P5 | ReaLVR diagnostic (arXiv 2609.34563): is the latent actually used? | user, 2026-10-10 | dropped (latent direction dropped 2026-10-15) | After P2: swap test (other sample's latent, same caption → does the video / CLIP-V change?) and sensitivity test (latent from another segment of the same video → does the latent move?). ~1 GPU-hour. |
+| P6 | ReaLVR contrastive evidence loss for the latent | user, 2026-10-10 | dropped (latent direction dropped 2026-10-15) | Margin loss [m − (sim(z, f(true next clip)) − max sim(z, f(negatives)))]₊, weight ~0.2, added to the VDM loss. Hard negatives = other segments of the same video incl. the input segment, so "describe the present" cannot win (Stage 0's failure). Run if P5 shows the latent is decorative or weak. |
+| P7 | If latents enter Joint-GRPO, give them a gradient path | from P6 discussion (ReaLVR's LVR baseline) | dropped (latent direction dropped 2026-10-15) | LVR's GRPO treated latents as fixed context and they went unused; use the VDM loss or an auxiliary loss during RL. |
 | P8 | Use a more modern VLM (user asked about Qwen3.8) | user, 2026-10-10 | candidate (after a matched-backbone win) | Qwen3.8 smallest = 27.8B (video-capable): inference fits one A100, training needs 4-bit QLoRA + 2 GPUs. Practical upgrade: Qwen3-VL-8B / 4B (Oct 2025). For a paper, first show the method beats VANS with the same Qwen2.5-VL-3B, then show the gain holds with the bigger VLM; a win only from a bigger backbone is confounded. |
 | P9 | Paper: beat VANS on its benchmark | user, 2026-10-10 | candidate | Needs (1) a gain at matched backbone, (2) ablations (P5, pause/nocot), (3) a fair benchmark: original split (P3) or our rebuilt split released with protocol, same split for VANS, (4) a literature check for novelty (latent > caption for video next-event prediction). Then scale (P8). |
+| P10 | Improve captions by visual grounding with bounding boxes | user, 2026-10-15 | running | Experiment 8: arms ground_text / ground_zoom / ground_think vs nocot; best arm rendered by the VANS video model. |
+| P11 | Transfer check: do better captions give better videos? | from 2026-10-15 recommendation | running | `nocot` captions (ROUGE-L 0.276 vs VANS 0.209) rendered by the released VANS video model; compare CLIP-V with VANS captions (0.775) and GT captions (0.806). |
+| P12 | Detailed descriptions of what changes (objects, actions, positions) instead of a one-sentence caption, trained with video-rewarded RL | from 2026-10-15 recommendation | candidate | After P10/P11. Grounded object lists are a first version of this. |
 
 ## Next steps
 
-0. **Top priority: test the core claim in the VANS setting.** The VDM pilot (experiment 3) tested
-   caption + latent only in an easier setting (1 context frame, same-clip future, LoRA, flow loss,
-   with a weak regression-trained Stage 0 latent), so it does not answer whether a good latent beats
-   a caption. New experiment: two arms trained identically in the VANS setting (6 reference latents,
-   33 frames at 352x640, next-event clips, full DiT, init from the released VANS DiT, our VANS
-   training data, GT captions in training), differing only in conditioning:
-   (a) caption; (b) caption + K latent tokens from Qwen (learnable query tokens -> projector, appended
-   to the umT5 caption embedding), trained end to end with the VDM loss (projector, query tokens and
-   Qwen LoRA all receive gradients). Evaluate both on the rebuilt benchmark with VANS VLM captions and
-   with GT captions. This comes before Joint-GRPO.
-0b. **Coconut-style continuous reasoning** (idea from Coconut, Hao et al. 2024, arXiv 2412.06769;
-   `scripts/vans_coconut.py`). Stage 0 failed because the latent had a hand-made target and learned
-   "describe the present"; Coconut gives latent thoughts no direct target (only the loss on what comes
-   after) and uses a curriculum that gradually replaces written reasoning with continuous thoughts.
-   (a) Captions first, since caption quality is the measured bottleneck: four arms from VANS's VLM,
-   same data and steps: `cot` (full written reasoning), `nocot`, `coconut` (curriculum, c=2 thoughts
-   per replaced sentence, 4 stages, then no written reasoning), `pause` (same slots, learned pause
-   vector, no recurrence: controls for extra compute). Metric: BLEU / ROUGE-L of greedy captions on the
-   400-sample benchmark, plus the untrained VANS VLM under the same decoding.
-   Findings while building it (job 66838): the released VANS VLM has 2.8-4.1 nats/token CE on our
-   training rows' GT think+caption even in its own text format (our hand-built embedding path matches
-   Qwen's native forward to ~0.03), consistent with its low ROUGE-L here. Qwen's last-layer hidden RMS
-   is ~3.9 vs input-embedding RMS ~0.0225, so thoughts are rescaled to embedding RMS before being fed
-   back (raw feedback exploded gradients). Runs: 4 arms x 5 stages x 500 steps (grad accum 4), queued
-   as job slots free; W&B `latentvans-coconut`. Watch: coconut loss must recover within each stage.
-   (b) If (a) helps: feed the final thoughts to the video model (as in item 0) while progressively
-   dropping caption words, to test whether latents can replace the caption.
-1. Inspect generated videos from `vans` and `pilot_*` to explain the FVD gap; fix the FVD protocol
-   (frame count / resampling) so arms are comparable, then rescore all five arms.
-2. Check why VANS's captions reach ROUGE-L 0.21 here vs 0.36 in the paper (decoding settings,
-   prompt format, our split). Calibrate the stage-2 anchor threshold (paper: ROUGE-L ≥ 0.6, which
-   would reject most prompts at the current caption quality).
-3. When the training data is done: VLM SFT, then VDM SFT (with the latent/text cache), then GRPO
-   stage 1, then stage 2. Evaluate after each stage with the same five-arm protocol.
-4. Main comparison: our SFT → Joint-GRPO vs released VANS on the same rebuilt split, since the
-   paper's absolute numbers do not carry over.
-5. Since better captions are the lever, test whether our own VLM path (end-to-end training of the
-   VLM against the video model's loss) improves captions beyond GRPO.
+1. Experiment 8: grounding pre-pass -> smoke test -> train the three grounded arms -> caption scores
+   with paired bootstrap vs `nocot` -> render the best arm with the VANS video model and score.
+2. P11 transfer check (parallel): if `nocot` captions raise CLIP-V toward the GT-caption ceiling,
+   caption quality is confirmed as the lever for video quality too.
+3. If a grounded arm wins: more training rows (we use 4,000; the paper used 100K), then Joint-GRPO
+   stage 1 on the best captioner (code ready, never run in full), then a newer VLM (P8).
+4. Fix the FVD protocol (frame count / resampling) so arms are comparable; check why VANS reaches
+   ROUGE-L 0.21 here vs 0.36 in the paper.

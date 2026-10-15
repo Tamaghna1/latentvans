@@ -5,6 +5,8 @@ Arms:
                the paper's full system, used to check our benchmark/metrics against its Table 1.
   vans_oracle  VANS VDM rendering the ground-truth caption (no VLM): the gap between this and
                `vans` is the part of the error due to reasoning rather than the video model.
+  captions     VANS VDM rendering captions from another captioner (--captions glob of jsonl files with
+               sample_id/caption, e.g. results/vans_ground/<arm>/captions_shard*.jsonl), saved as --name.
 
 Inference settings follow code/VANS/inference.py: 352x640, 33 frames, 50 steps, CFG 5, shift 5,
 seed 0, their negative prompt, 6 reference latents from the input video. Two departures, both
@@ -13,9 +15,10 @@ checkpoint (the same weights DiffSynth loads from the original .pth, same zero p
 the prompt length), and the DiT is built directly from VANS_vlm.safetensors (a full DiT
 state dict) rather than from base Wan weights that it would overwrite anyway.
 
-Output: <out_dir>/<arm>/{videos/<sample_id>.mp4, captions.jsonl}; resumable, shardable.
+Output: <out_dir>/<arm or name>/{videos/<sample_id>.mp4, captions.jsonl}; resumable, shardable.
 """
 import argparse
+import glob
 import json
 import os
 import time
@@ -128,7 +131,9 @@ def build_pipe(args, use_mllm):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--arm", choices=["vans", "vans_oracle"], required=True)
+    p.add_argument("--arm", choices=["vans", "vans_oracle", "captions"], required=True)
+    p.add_argument("--captions", default=None, help="--arm captions: glob of caption jsonl files")
+    p.add_argument("--name", default=None, help="output subdir (default: the arm)")
     p.add_argument("--bench_dir", required=True)
     p.add_argument("--out_dir", required=True)
     p.add_argument("--vans_code", required=True)
@@ -147,7 +152,16 @@ def main():
     rows = [json.loads(l) for l in open(os.path.join(args.bench_dir, "benchmark.jsonl"))]
     rows = rows[:args.limit] if args.limit else rows
     rows = rows[args.shard::args.num_shards]
-    out = os.path.join(args.out_dir, args.arm)
+    out = os.path.join(args.out_dir, args.name or args.arm)
+    given = {}
+    if args.arm == "captions":
+        for f in sorted(glob.glob(args.captions)):
+            for l in open(f):
+                c = json.loads(l)
+                given[c["sample_id"]] = c["caption"]
+        log(f"{len(given)} captions from {args.captions}")
+        if not given:
+            raise RuntimeError(f"no captions match {args.captions}")
     os.makedirs(os.path.join(out, "videos"), exist_ok=True)
     cap_path = os.path.join(out, f"captions_shard{args.shard}.jsonl")
     done = {json.loads(l)["sample_id"] for l in open(cap_path)} if os.path.exists(cap_path) else set()
@@ -173,13 +187,16 @@ def main():
             caption = extract_caption(text)
         else:
             text = None
-            caption = r["gt_caption"]
+            caption = given.get(r["sample_id"]) if args.arm == "captions" else r["gt_caption"]
+            if caption is None:
+                log(f"WARNING: no caption for {r['sample_id']}, skipped")
+                continue
             video = pipe(prompt=caption, negative_prompt=NEGATIVE, seed=0, tiled=True, height=H, width=W,
                          num_frames=F, ref_VAE_video=ref)
         save_video(video, os.path.join(out, "videos", f"{r['sample_id']}.mp4"), fps=11, quality=5)
         with open(cap_path, "a") as f:
             f.write(json.dumps({"sample_id": r["sample_id"], "caption": caption, "raw": text}) + "\n")
-        log(f"[{args.arm} shard {args.shard}] {i + 1}/{len(rows)} {r['sample_id']} ({time.time() - t0:.0f}s)")
+        log(f"[{args.name or args.arm} shard {args.shard}] {i + 1}/{len(rows)} {r['sample_id']} ({time.time() - t0:.0f}s)")
     log("GENERATION DONE")
 
 

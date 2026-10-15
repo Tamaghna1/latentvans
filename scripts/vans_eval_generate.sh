@@ -11,6 +11,7 @@ set -euo pipefail
 
 # Generates VANS-benchmark answers for one arm on 2 GPUs (one shard per GPU), then scores it.
 #   ARM=vans | vans_oracle                       released VANS model (envs/vans)
+#   ARM=captions NAME=<name> CAPTIONS=<glob>     released VANS VDM rendering another captioner's captions
 #   ARM=pilot NAME=<name> CKPT=<step dir> CAPTIONS=null|oracle|<glob>   a VDM pilot arm (envs/latentvans)
 # Resubmitting resumes. LIMIT=N runs only the first N samples (smoke test).
 T=/scratch/users/anirban/tamaghnam
@@ -38,11 +39,11 @@ else
     CUDA_VISIBLE_DEVICES=$k $PY $S/scripts/vans_eval_generate.py --arm $ARM --bench_dir $BENCH --out_dir $OUT \
       --vans_code $S/code/VANS --vans_dir $S/checkpoints/VANS --wan_orig_dir $S/checkpoints/Wan2.1-T2V-1.3B-orig \
       --wan_diffusers_dir $S/checkpoints/Wan2.1-T2V-1.3B-Diffusers-bf16 --qwen_dir $S/checkpoints/Qwen2.5-VL-3B-Instruct \
-      --shard $k --num_shards 2 $LIM &
+      --shard $k --num_shards 2 $LIM ${NAME:+--name $NAME} ${CAPTIONS:+--captions "$CAPTIONS"} &
     PIDS+=($!)
   done
   for p in ${PIDS[@]}; do wait $p; done
-  ARM_DIR=$OUT/$ARM
+  ARM_DIR=$OUT/${NAME:-$ARM}
 fi
 
 $T/envs/vans/bin/python $S/scripts/vans_eval_metrics.py --bench_dir $BENCH --arm_dir $ARM_DIR \

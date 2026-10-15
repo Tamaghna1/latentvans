@@ -39,10 +39,10 @@ from vans_rl_common import build_vlm, log, lora_state_dict, parse_answer
 SENT = re.compile(r"(?<=[.!?])\s+")
 
 
-def parse_args():
+def parse_args(arms=("cot", "nocot", "coconut", "pause")):
     p = argparse.ArgumentParser()
     p.add_argument("--mode", choices=["train", "eval"], required=True)
-    p.add_argument("--arm", choices=["cot", "nocot", "coconut", "pause"], required=True)
+    p.add_argument("--arm", choices=list(arms), required=True)
     p.add_argument("--data_dir")
     p.add_argument("--bench_dir")
     p.add_argument("--output_dir", required=True)
@@ -237,14 +237,14 @@ class Coconut(nn.Module):
         return "[Think]" + ("<latent>" if latent else "") + text
 
 
-def train(args):
+def train(args, model_cls=Coconut):
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     device = "cuda"
     os.makedirs(args.output_dir, exist_ok=True)
     json.dump(vars(args), open(os.path.join(args.output_dir, "config.json"), "w"), indent=2)
     rows = [json.loads(l) for l in open(os.path.join(args.data_dir, "benchmark.jsonl"))]
-    model = Coconut(args, device, os.path.join(args.vans_dir, "VANS_mllm.safetensors"))
+    model = model_cls(args, device, os.path.join(args.vans_dir, "VANS_mllm.safetensors"))
     curriculum = args.arm in ("coconut", "pause")
     n_stages = args.max_stage + 1 if curriculum else 1
     total = args.stage_steps * (args.max_stage + 1)  # same optimizer steps for every arm
@@ -321,12 +321,12 @@ def train(args):
     log("TRAINING COMPLETE")
 
 
-def evaluate(args):
+def evaluate(args, model_cls=Coconut):
     device = "cuda"
     rows = [json.loads(l) for l in open(os.path.join(args.bench_dir, "benchmark.jsonl"))]
     rows = (rows[:args.limit] if args.limit else rows)[args.shard::args.num_shards]
     init = os.path.join(args.vans_dir, "VANS_mllm.safetensors")
-    model = Coconut(args, device, init if args.ckpt == "init" else os.path.join(args.ckpt, "vlm_lora.safetensors"))
+    model = model_cls(args, device, init if args.ckpt == "init" else os.path.join(args.ckpt, "vlm_lora.safetensors"))
     if args.ckpt != "init":
         model.special.data = torch.load(os.path.join(args.ckpt, "special.pt"))["special"].to(device)
     model.eval()

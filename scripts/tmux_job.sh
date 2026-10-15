@@ -39,7 +39,7 @@ make_session() {
     tmux send-keys -t "$session:err" "tail -n +1 -F '$err'" Enter
     tmux new-window -t "$session" -n status
     tmux send-keys -t "$session:status" \
-        "while squeue -h -j $jobid 2>/dev/null | grep -q .; do clear; date; squeue -j $jobid; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList; sleep 60; done; sleep 30; tmux send-keys -t og C-c; tmux send-keys -t rr C-c; clear; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList" Enter
+        "while squeue -h -j $jobid 2>/dev/null | grep -q .; do clear; date; squeue -j $jobid; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList; sleep 60; done; sleep 30; tmux send-keys -t ${session}:log C-c; tmux send-keys -t ${session}:err C-c; clear; sacct -j $jobid -X --format=JobID,JobName%24,State,Elapsed,NodeList" Enter
     tmux select-window -t "$session:log"
     echo "job $jobid -> tmux session $session (attach: tmux a -t $session)"
 }
