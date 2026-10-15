@@ -90,18 +90,20 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
 | released VANS (no fine-tune) | VANS VLM | 1477 | 0.775 | 0.287 | 0.209 |
 | caption arm (fine-tuned) | VANS VLM | 544 | 0.763 | 0.277 | 0.209 |
 | caption arm (fine-tuned) | ground truth | 665 | 0.777 | 0.300 | – |
-| latent arm | VANS VLM | pending (67831) | | | |
-| latent arm | ground truth | pending (67832) | | | |
+| latent arm | VANS VLM | 928 | 0.760 | 0.276 | 0.209 |
+| latent arm | ground truth | 1081 | 0.778 | 0.301 | – |
 
 - The latent tokens' learned gain fell steadily during training (0.075 -> 0.068): the DiT turned the
   latent down rather than up. Early sign it adds little.
+- **Result: latent adds nothing.** CLIP-V/T equal to the caption arm within noise (0.760 vs 0.763 with
+  VANS captions, 0.778 vs 0.777 with GT captions). Core claim not supported in the VANS setting.
 - Fine-tuning on our 4K rows slightly lowered CLIP-V/T vs the released DiT (0.763 vs 0.775).
 
 ## Experiment 7: Coconut continuous reasoning (VLM captions)
 
 - `coconut` arm (67505, 4 stages, 2 thoughts/step): ROUGE-L **0.283**, BLEU@4 0.073 vs released VANS VLM
   0.209 / 0.032. Needs controls before reading anything into it: untrained VLM through the same eval
-  path (67833) and `nocot` arm trained on the same data (67834). `format_ok=0` only because the
+  path (67833: ROUGE-L 0.216, BLEU@4 0.036 -> the eval path is not the cause) and `nocot` arm trained on the same data (67834). `format_ok=0` only because the
   checker expects text inside [Think]; answers parse fine.
 
 ## In progress
