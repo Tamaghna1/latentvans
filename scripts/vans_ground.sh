@@ -13,6 +13,7 @@ set -euo pipefail
 #   MODE=objects [LIMIT=N]                          grounding pre-pass over vans_train + vans_eval (one shard per GPU)
 #   MODE=train ARM=ground_text|ground_zoom|ground_think [OUTDIR=...] [EXTRA="..."]
 #   MODE=eval  ARM=... CKPT=<dir> [NAME=...] [LIMIT=N]   (one shard per GPU, then caption scores)
+#   MODE=probe                                      compare grounding prompts on 8 extracted frames
 #   MODE=smoke                                      3 train steps + 3 eval rows for every arm
 T=/scratch/users/anirban/tamaghnam
 S=$T/latentvans
@@ -50,6 +51,8 @@ if [[ "$MODE" == objects ]]; then
   for d in vans_eval vans_train; do
     echo "$d: $(cat $S/data/$d/ground/objects_shard*.jsonl | wc -l) rows grounded, $(du -sh $S/data/$d/ground | cut -f1)"
   done
+elif [[ "$MODE" == probe ]]; then  # compare grounding prompts on a few extracted frames
+  $PY $S/scripts/ground_prompt_probe.py --data_dir $S/data/vans_eval --qwen_dir $S/checkpoints/Qwen2.5-VL-3B-Instruct
 elif [[ "$MODE" == train ]]; then
   $PY $S/scripts/vans_ground.py --mode train --arm $ARM --data_dir $S/data/vans_train \
     --output_dir ${OUTDIR:-$S/checkpoints/vans_ground/$ARM} --wandb_project latentvans-grounding \

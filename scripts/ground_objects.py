@@ -1,10 +1,15 @@
 """Visual grounding pre-pass for VANS benchmark / training rows: which objects are where in the last input frame.
 
-For every row: the last decoded frame of the input clip (the last of the 6 frames VANS's VLM samples, here at
-the clip's native resolution instead of the VLM's 364x644) -> Qwen2.5-VL-3B-Instruct (the base model, no VANS
-LoRA), asked to box every object, tool, ingredient and hand involved in the activity -> labels + boxes on a
-0-1000 scale. Also saves a zoomed crop of the active region (hands and the objects they touch; else the
-largest object and what touches it) for vans_ground.py's ground_zoom arm.
+For every row, on the last decoded frame of the input clip (the last of the 6 frames VANS's VLM samples):
+  1. name: Qwen2.5-VL-3B-Instruct (base, no VANS LoRA), given the user's instruction for task context, lists
+     the hands and the specific objects, tools, food and ingredients in the scene ("wooden spoon",
+     "stainless steel pot", ...). Asked to box everything itself, the 3B model mostly returned generic labels
+     ("food", "object") and missed or invented objects (ground_prompt_probe.py, job 68483), but it names well.
+  2. box: Grounding DINO boxes each name in one forward pass over "name1. name2. ... hand."; a name keeps
+     its best-scoring box if that score clears --box_threshold, else it is dropped (this also filters names
+     the VLM invented). Up to two hand boxes.
+Boxes are on a 0-1000 scale. Also saves a zoomed crop of the active region (hands and the objects they touch;
+else the largest object and what touches it) for vans_ground.py's ground_zoom arm.
 
 Output per data dir: ground/{<sample_id>_last.jpg, <sample_id>_zoom.jpg, objects_shard<k>.jsonl}; resumable.
 """
@@ -19,11 +24,15 @@ import time
 import torch
 from PIL import Image
 
-PROMPT = ('Locate every object, tool, ingredient and hand involved in the activity shown in this image, and '
-          'output all the bounding box coordinates in JSON format: a list of {"bbox_2d": [x1, y1, x2, y2], '
-          '"label": "<short name with its color or material>"}.')
+LIST_PROMPT = ('The person in this image says: "{instruction}"\n'
+               'List the specific objects, tools, food and ingredients visible in this image that are involved in '
+               'the task. Give each a short specific name with its color or material, like "wooden spoon", '
+               '"chopped red onion" or "stainless steel pot". Answer with a comma-separated list only.')
+MAX_NAMES = 10
 MAX_OBJECTS = 12
 ZOOM_SIDE = 644  # longer side of the saved crop (the VLM's video frames are 364x644)
+GENERIC = {"food", "object", "objects", "ingredient", "ingredients", "tool", "tools", "item", "items", "thing",
+           "hand", "hands", "person", "kitchen", "table", "background"}
 
 
 def log(msg):
@@ -32,32 +41,89 @@ def log(msg):
 
 def last_frame(src, dest):
     """Decode the final second and keep overwriting one file, so it ends as the last decoded frame."""
-    subprocess.run([os.environ.get("FFMPEG", "ffmpeg"), "-v", "error", "-y", "-sseof", "-1", "-i", src, "-update", "1", "-q:v", "2", dest],
-                   check=True, capture_output=True)
+    subprocess.run([os.environ.get("FFMPEG", "ffmpeg"), "-v", "error", "-y", "-sseof", "-1", "-i", src,
+                    "-update", "1", "-q:v", "2", dest], check=True, capture_output=True)
     return Image.open(dest).convert("RGB")
 
 
-def parse_objects(text, w_in, h_in):
-    """Qwen2.5-VL boxes are in pixels of its resized input (w_in x h_in); returns them on a 0-1000 scale.
-    Items are parsed one by one so a list cut off by max_new_tokens still yields its complete items."""
-    out, seen = [], set()
-    for item in re.findall(r"\{[^{}]*\}", text):
-        try:
-            d = json.loads(item)
-            x1, y1, x2, y2 = [float(v) for v in d["bbox_2d"]]
-            label = str(d["label"]).strip()
-        except (ValueError, KeyError, TypeError):
-            continue
-        b = [round(min(max(v / s * 1000, 0), 1000)) for v, s in ((x1, w_in), (y1, h_in), (x2, w_in), (y2, h_in))]
-        if b[2] - b[0] < 5 or b[3] - b[1] < 5 or not label or (label.lower(), tuple(b)) in seen:
-            continue
-        seen.add((label.lower(), tuple(b)))
-        out.append({"label": label, "box": b})
-    return out[:MAX_OBJECTS]
+def parse_names(text):
+    """Comma/newline-separated names -> up to MAX_NAMES distinct, non-generic names."""
+    out = []
+    for n in re.split(r"[,\n;]", text):
+        n = re.sub(r"^[\s\-\*\d\.\)]+|[\s\.\"']+$", "", n).strip().strip('"').lower()
+        if n and len(n) <= 40 and n not in GENERIC and n not in out:
+            out.append(n)
+    return out[:MAX_NAMES]
+
+
+class Lister:
+    """Qwen2.5-VL-3B-Instruct naming the objects in a batch of frames."""
+
+    def __init__(self, qwen_dir):
+        from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            qwen_dir, torch_dtype=torch.bfloat16, attn_implementation="sdpa").to("cuda").eval()
+        self.proc = AutoProcessor.from_pretrained(qwen_dir, max_pixels=1280 * 28 * 28)
+        self.proc.tokenizer.padding_side = "left"
+
+    @torch.no_grad()
+    def __call__(self, imgs, instructions):
+        texts = [self.proc.apply_chat_template(
+            [{"role": "user", "content": [{"type": "image"},
+                                          {"type": "text", "text": LIST_PROMPT.format(instruction=ins)}]}],
+            tokenize=False, add_generation_prompt=True) for ins in instructions]
+        inp = self.proc(text=texts, images=imgs, return_tensors="pt", padding=True).to("cuda")
+        gen = self.model.generate(**inp, max_new_tokens=96, do_sample=False)
+        return self.proc.batch_decode(gen[:, inp["input_ids"].shape[1]:], skip_special_tokens=True)
+
+
+class Boxer:
+    """Grounding DINO: best box per name in one pass (per-name score = max sigmoid over the name's tokens)."""
+
+    def __init__(self, model_id, box_threshold):
+        from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
+        self.proc = AutoProcessor.from_pretrained(model_id)
+        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to("cuda").eval()
+        self.th = box_threshold
+
+    @torch.no_grad()
+    def __call__(self, img, names):
+        queries = names + ["hand"]
+        text = ". ".join(queries) + "."
+        inp = self.proc(images=img, text=text, return_tensors="pt").to("cuda")
+        out = self.model(**inp)
+        prob = out.logits[0].sigmoid()  # (queries, text tokens)
+        boxes = out.pred_boxes[0]  # (queries, 4) normalized cx, cy, w, h
+        offsets = self.proc.tokenizer(text, return_offsets_mapping=True)["offset_mapping"]
+        objs, start = [], 0
+        for q in queries:
+            span = (start, start + len(q))
+            start += len(q) + 2
+            toks = [i for i, (a, b) in enumerate(offsets) if b > a and a >= span[0] and b <= span[1]]
+            if not toks:
+                continue
+            score = prob[:, toks].max(-1).values
+            picks = score.argsort(descending=True)[:2 if q == "hand" else 1]
+            for k in picks.tolist():
+                s = float(score[k])
+                if s < self.th:
+                    continue
+                cx, cy, w, h = boxes[k].tolist()
+                b = [round(min(max(v, 0), 1) * 1000) for v in (cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2)]
+                if q == "hand" and any(o["label"] == "hand" and iou(o["box"], b) > 0.5 for o in objs):
+                    continue
+                objs.append({"label": q, "box": b, "score": round(s, 3)})
+        objs.sort(key=lambda o: -o["score"])
+        return objs[:MAX_OBJECTS]
 
 
 def area(b):
     return (b[2] - b[0]) * (b[3] - b[1]) / 1e6
+
+
+def iou(a, b):
+    i = max(min(a[2], b[2]) - max(a[0], b[0]), 0) * max(min(a[3], b[3]) - max(a[1], b[1]), 0) / 1e6
+    return i / max(area(a) + area(b) - i, 1e-9)
 
 
 def touches(a, b):
@@ -103,20 +169,16 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--data_dirs", nargs="+", required=True)
     p.add_argument("--qwen_dir", required=True)
+    p.add_argument("--gdino", default="IDEA-Research/grounding-dino-base")
+    p.add_argument("--box_threshold", type=float, default=0.3)
     p.add_argument("--shard", type=int, default=0)
     p.add_argument("--num_shards", type=int, default=1)
     # the vision tower's SDPA mask spans every patch in the batch: 12 native-res frames need a 16 GB mask
     p.add_argument("--batch_size", type=int, default=4)
-    p.add_argument("--max_new_tokens", type=int, default=512)
     p.add_argument("--limit", type=int, default=None, help="first N rows of each data dir (smoke test)")
     args = p.parse_args()
 
-    from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
-    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        args.qwen_dir, torch_dtype=torch.bfloat16, attn_implementation="sdpa").to("cuda").eval()
-    proc = AutoProcessor.from_pretrained(args.qwen_dir, max_pixels=1280 * 28 * 28)
-    proc.tokenizer.padding_side = "left"
-
+    lister, boxer = Lister(args.qwen_dir), Boxer(args.gdino, args.box_threshold)
     for d in args.data_dirs:
         gdir = os.path.join(d, "ground")
         os.makedirs(gdir, exist_ok=True)
@@ -144,21 +206,16 @@ def main():
                         raise RuntimeError("20 consecutive frame-extraction failures") from e
             if not batch:
                 continue
-            msgs = [[{"role": "user", "content": [{"type": "image"}, {"type": "text", "text": PROMPT}]}]] * len(batch)
-            texts = [proc.apply_chat_template(m, tokenize=False, add_generation_prompt=True) for m in msgs]
-            inp = proc(text=texts, images=imgs, return_tensors="pt", padding=True).to("cuda")
-            with torch.no_grad():
-                gen = model.generate(**inp, max_new_tokens=args.max_new_tokens, do_sample=False)
-            outs = proc.batch_decode(gen[:, inp["input_ids"].shape[1]:], skip_special_tokens=True)
+            lists = lister(imgs, [r["instruction"] for r in batch])
             with open(path, "a") as f:
-                for r, img, text, g in zip(batch, imgs, outs, inp["image_grid_thw"].tolist()):
-                    objs = parse_objects(text, g[2] * 14, g[1] * 14)
+                for r, img, text in zip(batch, imgs, lists):
+                    objs = boxer(img, parse_names(text))
                     zb = zoom_box(objs)
                     save_zoom(img, zb, os.path.join(gdir, f"{r['sample_id']}_zoom.jpg"))
                     n_obj += len(objs)
                     f.write(json.dumps({"sample_id": r["sample_id"], "frame": f"ground/{r['sample_id']}_last.jpg",
                                         "zoom": f"ground/{r['sample_id']}_zoom.jpg", "zoom_box": zb,
-                                        "size": list(img.size), "objects": objs, "raw": text}) + "\n")
+                                        "size": list(img.size), "objects": objs, "names_raw": text}) + "\n")
             k = min(i + args.batch_size, len(todo))
             log(f"{os.path.basename(d)} shard {args.shard}: {k}/{len(todo)}, {n_obj / k:.1f} objects/frame, "
                 f"{(time.time() - t0) / k:.2f} s/row | e.g. {[o['label'] for o in objs][:6]}")
