@@ -105,7 +105,8 @@ def main():
     p.add_argument("--qwen_dir", required=True)
     p.add_argument("--shard", type=int, default=0)
     p.add_argument("--num_shards", type=int, default=1)
-    p.add_argument("--batch_size", type=int, default=12)
+    # the vision tower's SDPA mask spans every patch in the batch: 12 native-res frames need a 16 GB mask
+    p.add_argument("--batch_size", type=int, default=4)
     p.add_argument("--max_new_tokens", type=int, default=512)
     p.add_argument("--limit", type=int, default=None, help="first N rows of each data dir (smoke test)")
     args = p.parse_args()
