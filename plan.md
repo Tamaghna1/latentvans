@@ -179,6 +179,33 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
   closes ~19% of the CLIP-V gap to ground-truth captions. Caption quality is the right lever, and
   ROUGE-L gains have to be large to move video metrics.
 
+## Experiment 9: does the benchmark measure next-event prediction? (from 2026-10-16)
+
+Diagnostics for the paper framing (P16, P23, P24, P25). Code: `scripts/copy_baselines.py/.sh`, blind arm
+in `scripts/vans_ground.py`.
+- **Copy baselines (P16, job 68664):** answers that predict nothing, scored with the same metrics.
+  Paired over the same 400 samples (95% CI):
+
+  | Answer video | CLIP-V | CLIP-T | FVD |
+  |---|---|---|---|
+  | VANS video model, VANS captions | 0.775 | 0.287 | 1477 |
+  | VANS video model, `nocot` captions | 0.781 | 0.292 | 1434 |
+  | VANS video model, ground-truth captions | 0.806 | 0.325 | 1497 |
+  | `copy_last`: last input frame, frozen for 33 frames | **0.811** | 0.289 | 903 |
+  | `copy_input`: the input clip itself | 0.810 | 0.287 | **237** |
+
+  copy_last - VANS: CLIP-V +0.035 [+0.028, +0.043] (higher on 73% of samples); copy_last - GT-caption
+  videos: +0.004 [-0.003, +0.012]. CLIP-T: copy_last - VANS +0.002 [-0.002, +0.006], copy_last - nocot
+  -0.003 [-0.006, +0.001]; only GT-caption videos are higher (+0.036 [+0.032, +0.040]).
+  **A frozen frame beats every model on CLIP-V and ties ground-truth-caption videos; CLIP-T cannot
+  tell the models' videos from no prediction; the input clip has the best FVD.** On this split the
+  video metrics reward reproducing the scene, not showing the next event. CLIP-T separates only
+  videos made from the right caption, so it is the one video metric with some signal. Caveats: our
+  rebuilt split, not the paper's (P3); real frames also look sharper than generated ones, which CLIP-V
+  may reward. Next: does the same hold on the paper's split / other video-as-answer benchmarks, and
+  which metric does track the event (VLM judge, P25)?
+- Blind captioner (P23, 68665 train, 68680 eval) and second `nocot` seed (P24, 68666): running.
+
 ## Cluster notes
 
 - 2026-10-10 17:03: scratch quota (~100 GB) filled while two runs saved checkpoints; the caption arm
@@ -212,7 +239,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P13 | GRPO stage 1 on the best captioner, text rewards first (ROUGE-L + format, no rendered video), then add the CLIP-V reward | 2026-10-16 literature review (VANS Table 2a; SCST-style metric RL) | candidate, top priority | VANS: SFT -> stage 1 = ROUGE-L +0.082, BLEU@4 +0.075, CLIP-V +0.015, CLIP-T +0.032 (VDM frozen, so the video gain comes from captions alone). Our `nocot` (0.276) ≈ their SFT (0.281). Text-only rewards need no video rendering, so it is far cheaper than the full stage 1 (~4 min/step). Watch for templated captions (keep KL, check CLIP-V/T transfer). |
 | P14 | GRPO stage 2 (Flow-GRPO on the DiT): reward CLIP-V to the target video + CLIPScore to the anchor caption | VANS Table 2a | candidate, after P13 | VANS: CLIP-V +0.022, CLIP-T +0.030, FVD -1.9 over stage 1. Most expensive step (video rollouts, group 8, ~1K steps). Needs the FVD protocol fixed first to report FVD. |
 | P15 | Test-time selection: MBR captions (N samples, pick the one with the highest mean ROUGE-L to the others); best-of-N videos picked by the medoid (CLIP-V to the other samples) or CLIPScore to the caption | MBR decoding literature (arXiv 2311.05263, 2401.02749) | candidate, cheap for captions | No training. Captions: N=8–16 samples of a 3B VLM, minutes. Videos cost N x ~95 s per sample. |
-| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | running (68664) | Measures how much of CLIP-V is scene copying vs predicting the event. If a static copy scores near 0.78+, video gains come from visual conditioning, not captions. |
+| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | done: frozen frame beats all models | Experiment 9: copy_last CLIP-V 0.811 vs VANS 0.775, nocot captions 0.781, GT captions 0.806; CLIP-T ties the models (0.289 vs 0.287/0.292); input clip FVD 237 vs VANS 1477. |
 | P17 | More SFT rows: 4K -> the full procedural training set (VANS used 30K procedural of 100K) | VANS setup | candidate | Run before P13 if cheap enough; the RL starting point matters. |
 | P18 | Stage 1 reward fixes: (a) drop the format reward or make it a gate (`nocot` never writes [Think], so r_format is 0 except on rare samples, where its +1 swamps ROUGE differences of ~0.05); (b) render all G captions of a group with the same seed (now seed + k, so CLIP-V differences partly measure noise); (c) normalize each reward within the group before summing (GDPO, arXiv 2601.05242), else ROUGE's larger spread drowns CLIP-V; (d) add BLEU@4 (a benchmark metric) to the reward; (e) several prompts per step instead of 1 | 2026-10-16 objective review (user asked to research the RL objective) | candidate, do with P13 | Log each reward's within-group std first to confirm (c). (a) and (b) are bugs for our setup and are cheap to fix. |
 | P19 | Visual reward without rendering: CLIP similarity between the caption and the ground-truth target frames | 2026-10-16 objective review | candidate | Rewards captions that describe what the target video shows, at text-reward cost; can replace or thin out the rendered CLIP-V reward. Compare against rendered CLIP-V on a few hundred captions first. |
@@ -228,7 +255,8 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 1. Experiment 8 (grounding): done, no gain; the ground_zoom render (68660, ~17:00 on 2026-10-16) only
    completes its benchmark row.
 2. Decide the paper framing (P25) with three diagnostics, running since 2026-10-16:
-   copy-the-frame video baselines (P16, 68664), blind no-video captioner (P23, 68665 then its eval),
+   copy-the-frame video baselines (P16: done, a frozen frame beats every model on CLIP-V and ties them
+   on CLIP-T -> leaning to the critique framing), blind no-video captioner (P23, 68665 then 68680),
    second `nocot` seed for the noise floor (P24, 68666 then its eval).
    - Copy / blind baselines close to the models -> benchmark-critique paper with an event-centric
      evaluation (P25); our negative results (experiments 6-8) are its evidence.
