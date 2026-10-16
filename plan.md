@@ -217,6 +217,7 @@ in `scripts/vans_ground.py`.
   | `const`: one fixed training caption for every sample ("a person is using a spoon and fork to place carrots and zucchini into a white bowl ...") | 0.231 | +0.022 [+0.014, +0.030] |
   | `nn_target`: training caption retrieved by the true next-step sentence (oracle step, no video) | 0.233 | +0.025 [+0.015, +0.035] |
   | `nn_instr`: training caption retrieved by the instruction text | 0.211 | - |
+  | `task_central`: most central training caption (max mean ROUGE-L to the others) of the same task, e.g. all "corn dogs" rows (no model, no video) | 0.243 | +0.034 [+0.026, +0.043] |
   | `target_sent`: the true next-step sentence itself ("deep fry the corn dog in oil") | 0.157 | - |
   | `nocot` (our fine-tuned VLM) | 0.276 | +0.067 [+0.057, +0.077] |
 
