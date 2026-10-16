@@ -152,7 +152,9 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
   model gets nothing from it that it does not already see in the video. ground_zoom's +0.006 is not
   from grounding: it is no larger on the 306 rows where a next-step object was detected in the last
   frame (+0.007) than on the 94 where none was (+0.004), and coconut (no grounding) shows the same
-  +0.006, so it is about the run-to-run spread of a fine-tune. Reading: the captioner already
+  +0.006. (Not seed spread: two `nocot` seeds differ by only 0.001, P24; the +0.006 is inside the
+  ±0.008 test-sample noise of 400 samples, so it is n.s., possibly a tiny shared fine-tuning effect.)
+  Reading: the captioner already
   perceives the scene; what it gets wrong is what happens next, which object boxes do not supply.
   ground_think (predict the next step's objects first) is slightly worse, significantly on YouCook
   (-0.013 [-0.024, -0.002]). **Conclusion: grounding with boxes does not improve next-event captions;
@@ -238,8 +240,11 @@ in `scripts/vans_ground.py`.
 - **Fixed-caption video (P16 + P23, 68768):** the `const` caption rendered by the released VANS video
   model for every sample (same input clips). If its CLIP-V/CLIP-T land near the models' videos, the
   video metrics do not depend on what the caption predicts. Output `results/vans_eval/captions_const`.
-- **Second `nocot` seed (P24):** training 68707 (resubmitted after 68680 so the shorter blind eval
-  ran first), eval 68708 queued after it.
+- **Second `nocot` seed (P24, 68707 train, 68708 eval, done):** ROUGE-L 0.277 (BLEU@4 0.068) vs seed 0
+  0.276: +0.001 [-0.007, +0.009]. Training seed spread is small; the ±0.008 CIs come from the 400-sample
+  test set. Every captioner variant vs seed 1: coconut +0.005 [-0.003, +0.014], ground_zoom +0.005
+  [-0.003, +0.013], ground_text +0.000, cot -0.002, ground_think -0.007 [-0.016, +0.002]: none
+  significant against either seed. Detecting a +0.005 effect would need roughly 4x the test samples.
 
 ## Cluster notes
 
@@ -282,7 +287,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P21 | Stage 2 optimizer: reward gradients (VADER, arXiv 2407.08737; CLIP-V/T are differentiable) or DiffusionNFT (arXiv 2509.16117, 3–25x more efficient than Flow-GRPO) / MixGRPO (arXiv 2507.21802) instead of Flow-GRPO | 2026-10-16 objective review | candidate | Flow-GRPO with group 8 is the most expensive part of the plan. VADER: 1 sample per prompt, truncated backprop, LoRA. Pick one after P20 shows stage 2 is worth it. |
 | P22 | Reward-hacking guard: train with a different CLIP (ViT-L/14 or SigLIP, + DINOv2) than the ViT-B/32 used for scoring; report both | 2026-10-16 objective review (Pref-GRPO arXiv 2508.20751 on hacking) | candidate | A gain that shows only under the training CLIP is reward hacking, not better videos. |
 | P23 | Blind baseline: predict the next-step caption from the instruction text alone (no video), and a "repeat the current step" caption | 2026-10-16 paper-direction review (user asked "am i on the right track") | done: fixed caption 0.231 (beats released VANS 0.209), blind VLM 0.246, nocot 0.276; video worth ~0.03 ROUGE-L | If text-only gets close to `nocot`'s 0.276 ROUGE-L, the caption metric mostly measures language priors, not watching the video. Decides the paper framing together with P16 and P24. |
-| P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | running (68707 train on an A5000, ~9.5 s/step, ETA ~19:30 on 2026-10-16; 68708 eval after) | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
+| P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | done: seeds differ by 0.001 ROUGE-L [-0.007, +0.009]; no captioner variant beats either seed | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
 | P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | candidate, depends on P16/P23/P24 | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). |
 
 ## Next steps
@@ -292,7 +297,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 2. Decide the paper framing (P25) with three diagnostics, running since 2026-10-16:
    copy-the-frame video baselines (P16: done, a frozen frame beats every model on CLIP-V and ties them
    on CLIP-T -> leaning to the critique framing), blind no-video captioner (P23, done: video worth ~0.03 ROUGE-L; a fixed caption beats released VANS),
-   second `nocot` seed for the noise floor (P24, 68707 then 68708).
+   second `nocot` seed for the noise floor (P24, done: seeds differ by 0.001; test-set noise ±0.008).
    - Copy / blind baselines close to the models -> benchmark-critique paper with an event-centric
      evaluation (P25); our negative results (experiments 6-8) are its evidence.
    - Baselines far below -> method paper: caption RL with text rewards first (P13, P18, P19), then
