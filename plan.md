@@ -234,6 +234,9 @@ in `scripts/vans_ground.py`.
   only 0.246 -> with video 0.276. **The video is worth ~0.03 ROUGE-L, 4x more than any captioner
   variant we tried (<= 0.007), but small next to the 0.231 a fixed caption gets.** So the caption
   metric carries some visual signal, unlike CLIP-V; its floor is just very high.
+- **Fixed-caption video (P16 + P23, 68768):** the `const` caption rendered by the released VANS video
+  model for every sample (same input clips). If its CLIP-V/CLIP-T land near the models' videos, the
+  video metrics do not depend on what the caption predicts. Output `results/vans_eval/captions_const`.
 - **Second `nocot` seed (P24):** training 68707 (resubmitted after 68680 so the shorter blind eval
   ran first), eval 68708 queued after it.
 
