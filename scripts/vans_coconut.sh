@@ -10,7 +10,7 @@
 set -euo pipefail
 
 # Coconut-style continuous reasoning for the VANS VLM; see vans_coconut.py.
-#   MODE=train ARM=cot|nocot|coconut|pause [EXTRA="..."]
+#   MODE=train ARM=cot|nocot|coconut|pause [OUTDIR=<dir>] [EXTRA="..."]   (e.g. EXTRA="--seed 1")
 #   MODE=eval  ARM=... CKPT=<dir>|init [NAME=...] [LIMIT=N]   (one shard per GPU, then caption scores)
 T=/scratch/users/anirban/tamaghnam
 S=$T/latentvans
@@ -20,7 +20,7 @@ COMMON="--vans_code $S/code/VANS --vans_dir $S/checkpoints/VANS --qwen_dir $S/ch
 
 if [[ "$MODE" == train ]]; then
   $PY $S/scripts/vans_coconut.py --mode train --arm $ARM --data_dir $S/data/vans_train \
-    --output_dir $S/checkpoints/vans_coconut/$ARM --wandb_project latentvans-coconut $COMMON ${EXTRA:-}
+    --output_dir ${OUTDIR:-$S/checkpoints/vans_coconut/$ARM} --wandb_project latentvans-coconut $COMMON ${EXTRA:-}
 else
   NAME=${NAME:-coconut_${ARM}}
   NG=$(nvidia-smi -L | wc -l)

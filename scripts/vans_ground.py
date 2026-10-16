@@ -11,6 +11,8 @@ each compares directly with its `nocot` arm ("[Think][/Think][Ans]caption[/Ans]"
   ground_think  plain instruction; the model first writes, inside [Think], the objects the next step will
                 use with their boxes in the last frame, then the caption. Targets: detected objects whose
                 label shares a noun with the GT caption / next-step sentence. No detector at test time.
+  blind         control: nocot with the video removed (instruction text only). How much of the caption
+                metric a model reaches from the user's words and language priors alone.
 
   train: --mode train --arm ground_text|ground_zoom|ground_think --data_dir data/vans_train
   eval:  --mode eval  --arm ... --ckpt <dir> --bench_dir data/vans_eval
@@ -26,7 +28,7 @@ import torch.nn as nn
 from vans_coconut import Coconut, evaluate, parse_args, train
 from vans_rl_common import log
 
-ARMS = ("ground_text", "ground_zoom", "ground_think")
+ARMS = ("ground_text", "ground_zoom", "ground_think", "blind")
 # not object identities: colors, materials, sizes and filler words in detector labels and captions
 NON_NOUNS = set("""a an the of with and in on at to from into onto by for its their his her is are be being
 some other another one two three left right top bottom front back side small large big long short round
@@ -53,6 +55,7 @@ class Grounded(Coconut):
                     r["dir"] = d
                     self.ground[r["sample_id"]] = r
         log(f"grounding loaded for {len(self.ground)} rows")
+        self.blind = args.arm == "blind"
         self.checked = False
 
     def inputs(self, arm, row, train):
@@ -80,18 +83,21 @@ class Grounded(Coconut):
         proc = self.agent.tokenizer
 
         def make(img):
-            content = [{"type": "video", "video": video_path}]
+            content = [] if self.blind else [{"type": "video", "video": video_path}]
             content += [{"type": "image", "image": img}] if img else []
             content += [{"type": "text", "text": instruction}]
             msgs = [{"role": "system", "content": [{"type": "text", "text": proc.system_prompt}]},
                     {"role": "user", "content": content}]
             text = proc.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
             images, videos = process_vision_info(msgs, self.device)
-            inp = proc(text=[text], images=images, videos=[videos], return_tensors="pt", padding=True,
-                       padding_side="left").to(self.device)
+            inp = proc(text=[text], images=images, videos=None if videos is None else [videos], return_tensors="pt",
+                       padding=True, padding_side="left").to(self.device)
             return {k: v for k, v in inp.items() if torch.is_tensor(v) and k != "labels"}
 
         out = make(image)
+        if not self.checked and self.blind:
+            log(f"blind prompt: {out['input_ids'].shape[1]} tokens, no video")
+            self.checked = True
         if not self.checked:
             ref, mine = super().prompt(video_path, instruction), (make(None) if image else out)
             if not torch.equal(ref["input_ids"], mine["input_ids"]) or not torch.equal(
@@ -103,14 +109,14 @@ class Grounded(Coconut):
 
     @torch.no_grad()
     def features(self, prompt):
-        vf = self.video_features(prompt)
+        vf = self.video_features(prompt) if "pixel_values_videos" in prompt else None
         if "pixel_values" not in prompt:
             return vf, None
         return vf, self.base.visual(prompt["pixel_values"].to(self.base.visual.dtype), grid_thw=prompt["image_grid_thw"])
 
     def rope(self, ids, prompt):
         kw = {"second_per_grid_ts": prompt["second_per_grid_ts"]} if "second_per_grid_ts" in prompt else {}
-        pos, _ = self.base.get_rope_index(ids, prompt.get("image_grid_thw"), prompt["video_grid_thw"],
+        pos, _ = self.base.get_rope_index(ids, prompt.get("image_grid_thw"), prompt.get("video_grid_thw"),
                                           attention_mask=torch.ones_like(ids), **kw)
         return pos
 

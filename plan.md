@@ -117,7 +117,7 @@ order, timesteps and noise (jobs 67503 caption, 67504 latent). Scored on the 400
   Conclusion: at this scale, reasoning (text or latent) adds nothing beyond fine-tuning. `format_ok=0` only because the
   checker expects text inside [Think]; answers parse fine.
 
-## Experiment 8: visually grounded captions with bounding boxes (in progress, from 2026-10-15)
+## Experiment 8: visually grounded captions with bounding boxes (2026-10-15/16: no gain)
 
 Question: does telling the captioner which objects are where improve its next-event captions, and do
 better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/vans_ground.py`,
@@ -137,7 +137,7 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
 - Smoke test passed (68491): grounded prompt reproduces VANS's tokenization exactly without the
   extras; the zoom crop adds 242 image tokens. Training: 68500 (ground_text), 68501 (ground_zoom),
   68502 (ground_think), all done 2026-10-16. Caption evals: 68651 (ground_text), 68626 (ground_zoom),
-  68637 (ground_think, running). Rendering ground_zoom's captions with the VANS video model: 68660.
+  68637 (ground_think), all done. Rendering ground_zoom's captions with the VANS video model: 68660.
 - **Caption results (400 samples, paired bootstrap vs `nocot`, 95% CI):**
 
   | Arm | ROUGE-L | BLEU@4 | ROUGE-L - nocot | Train loss (last 500 steps) |
@@ -145,6 +145,7 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
   | `nocot` | 0.276 | 0.070 | – | 1.042 |
   | `ground_text` | 0.277 | 0.075 | +0.001 [-0.006, +0.008] | 1.042 |
   | `ground_zoom` | 0.282 | 0.071 | +0.006 [-0.002, +0.014] | 1.037 |
+  | `ground_think` | 0.270 | 0.068 | -0.006 [-0.015, +0.002] | (incl. object list) |
   | `coconut` (exp. 7, for scale) | 0.283 | 0.073 | +0.006 [-0.001, +0.014] | – |
 
   No significant gain. The object list does not even lower the training loss (1.042 = nocot), so the
@@ -153,6 +154,9 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
   frame (+0.007) than on the 94 where none was (+0.004), and coconut (no grounding) shows the same
   +0.006, so it is about the run-to-run spread of a fine-tune. Reading: the captioner already
   perceives the scene; what it gets wrong is what happens next, which object boxes do not supply.
+  ground_think (predict the next step's objects first) is slightly worse, significantly on YouCook
+  (-0.013 [-0.024, -0.002]). **Conclusion: grounding with boxes does not improve next-event captions;
+  grounding stopped.** The ground_zoom render (68660) completes the benchmark row for the record.
 - Arms, all fine-tuned exactly like `nocot` (VANS VLM LoRA init, same 4,000 rows, order, 2,500 steps,
   lr 5e-5, loss on the answer):
   `ground_text` (object list with boxes added to the prompt), `ground_zoom` (+ the zoomed crop as an
@@ -202,30 +206,33 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P7 | If latents enter Joint-GRPO, give them a gradient path | from P6 discussion (ReaLVR's LVR baseline) | dropped (latent direction dropped 2026-10-15) | LVR's GRPO treated latents as fixed context and they went unused; use the VDM loss or an auxiliary loss during RL. |
 | P8 | Use a more modern VLM (user asked about Qwen3.8) | user, 2026-10-10 | candidate (after a matched-backbone win) | Qwen3.8 smallest = 27.8B (video-capable): inference fits one A100, training needs 4-bit QLoRA + 2 GPUs. Practical upgrade: Qwen3-VL-8B / 4B (Oct 2025). For a paper, first show the method beats VANS with the same Qwen2.5-VL-3B, then show the gain holds with the bigger VLM; a win only from a bigger backbone is confounded. |
 | P9 | Paper: beat VANS on its benchmark | user, 2026-10-10 | candidate | Needs (1) a gain at matched backbone, (2) ablations (P5, pause/nocot), (3) a fair benchmark: original split (P3) or our rebuilt split released with protocol, same split for VANS, (4) a literature check for novelty (latent > caption for video next-event prediction). Then scale (P8). |
-| P10 | Improve captions by visual grounding with bounding boxes | user, 2026-10-15 | running (2 of 3 arms: no gain) | Experiment 8: ground_text +0.001, ground_zoom +0.006 ROUGE-L vs nocot, both n.s.; ground_think pending; ground_zoom rendered by the VANS video model (68660). |
+| P10 | Improve captions by visual grounding with bounding boxes | user, 2026-10-15 | done: no gain | Experiment 8: ground_text +0.001, ground_zoom +0.006, ground_think -0.006 ROUGE-L vs nocot, all n.s.; ground_zoom rendered by the VANS video model (68660). |
 | P11 | Transfer check: do better captions give better videos? | from 2026-10-15 recommendation | done: yes, weakly | `nocot` captions (ROUGE-L 0.276 vs VANS 0.209) in the released VANS video model: CLIP-V 0.781 vs 0.775 (CI [+0.001, +0.011]), GT captions 0.806. ~19% of the gap to GT closed. |
 | P12 | Detailed descriptions of what changes (objects, actions, positions) instead of a one-sentence caption, trained with video-rewarded RL | from 2026-10-15 recommendation | candidate | After P10/P11. Grounded object lists are a first version of this. |
 | P13 | GRPO stage 1 on the best captioner, text rewards first (ROUGE-L + format, no rendered video), then add the CLIP-V reward | 2026-10-16 literature review (VANS Table 2a; SCST-style metric RL) | candidate, top priority | VANS: SFT -> stage 1 = ROUGE-L +0.082, BLEU@4 +0.075, CLIP-V +0.015, CLIP-T +0.032 (VDM frozen, so the video gain comes from captions alone). Our `nocot` (0.276) ≈ their SFT (0.281). Text-only rewards need no video rendering, so it is far cheaper than the full stage 1 (~4 min/step). Watch for templated captions (keep KL, check CLIP-V/T transfer). |
 | P14 | GRPO stage 2 (Flow-GRPO on the DiT): reward CLIP-V to the target video + CLIPScore to the anchor caption | VANS Table 2a | candidate, after P13 | VANS: CLIP-V +0.022, CLIP-T +0.030, FVD -1.9 over stage 1. Most expensive step (video rollouts, group 8, ~1K steps). Needs the FVD protocol fixed first to report FVD. |
 | P15 | Test-time selection: MBR captions (N samples, pick the one with the highest mean ROUGE-L to the others); best-of-N videos picked by the medoid (CLIP-V to the other samples) or CLIPScore to the caption | MBR decoding literature (arXiv 2311.05263, 2401.02749) | candidate, cheap for captions | No training. Captions: N=8–16 samples of a 3B VLM, minutes. Videos cost N x ~95 s per sample. |
-| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | candidate, ~1 GPU-hour | Measures how much of CLIP-V is scene copying vs predicting the event. If a static copy scores near 0.78+, video gains come from visual conditioning, not captions. |
+| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | running (68664) | Measures how much of CLIP-V is scene copying vs predicting the event. If a static copy scores near 0.78+, video gains come from visual conditioning, not captions. |
 | P17 | More SFT rows: 4K -> the full procedural training set (VANS used 30K procedural of 100K) | VANS setup | candidate | Run before P13 if cheap enough; the RL starting point matters. |
 | P18 | Stage 1 reward fixes: (a) drop the format reward or make it a gate (`nocot` never writes [Think], so r_format is 0 except on rare samples, where its +1 swamps ROUGE differences of ~0.05); (b) render all G captions of a group with the same seed (now seed + k, so CLIP-V differences partly measure noise); (c) normalize each reward within the group before summing (GDPO, arXiv 2601.05242), else ROUGE's larger spread drowns CLIP-V; (d) add BLEU@4 (a benchmark metric) to the reward; (e) several prompts per step instead of 1 | 2026-10-16 objective review (user asked to research the RL objective) | candidate, do with P13 | Log each reward's within-group std first to confirm (c). (a) and (b) are bugs for our setup and are cheap to fix. |
 | P19 | Visual reward without rendering: CLIP similarity between the caption and the ground-truth target frames | 2026-10-16 objective review | candidate | Rewards captions that describe what the target video shows, at text-reward cost; can replace or thin out the rendered CLIP-V reward. Compare against rendered CLIP-V on a few hundred captions first. |
 | P20 | Stage 2 on the captions the video model sees at test time: condition on VLM-sampled captions (no ROUGE-L >= 0.6 anchor filter), reward CLIP-V to the GT video + CLIPScore to the GT caption | 2026-10-16 objective review | candidate | VANS trains stage 2 only on near-perfect anchor captions; our captions average ROUGE-L 0.28, so few pass 0.6 and test-time captions are unlike training ones. Teaches the video model to fix caption errors from the input frames. Target: part of the 0.025 CLIP-V gap between our captions and GT captions. |
 | P21 | Stage 2 optimizer: reward gradients (VADER, arXiv 2407.08737; CLIP-V/T are differentiable) or DiffusionNFT (arXiv 2509.16117, 3–25x more efficient than Flow-GRPO) / MixGRPO (arXiv 2507.21802) instead of Flow-GRPO | 2026-10-16 objective review | candidate | Flow-GRPO with group 8 is the most expensive part of the plan. VADER: 1 sample per prompt, truncated backprop, LoRA. Pick one after P20 shows stage 2 is worth it. |
 | P22 | Reward-hacking guard: train with a different CLIP (ViT-L/14 or SigLIP, + DINOv2) than the ViT-B/32 used for scoring; report both | 2026-10-16 objective review (Pref-GRPO arXiv 2508.20751 on hacking) | candidate | A gain that shows only under the training CLIP is reward hacking, not better videos. |
-| P23 | Blind baseline: predict the next-step caption from the instruction text alone (no video), and a "repeat the current step" caption | 2026-10-16 paper-direction review (user asked "am i on the right track") | candidate, cheap | If text-only gets close to `nocot`'s 0.276 ROUGE-L, the caption metric mostly measures language priors, not watching the video. Decides the paper framing together with P16 and P24. |
-| P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | candidate, ~4 GPU-hours | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
+| P23 | Blind baseline: predict the next-step caption from the instruction text alone (no video), and a "repeat the current step" caption | 2026-10-16 paper-direction review (user asked "am i on the right track") | running (68665, blind arm of vans_ground.py: nocot without the video) | If text-only gets close to `nocot`'s 0.276 ROUGE-L, the caption metric mostly measures language priors, not watching the video. Decides the paper framing together with P16 and P24. |
+| P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | running (68666, seed 1) | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
 | P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | candidate, depends on P16/P23/P24 | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). |
 
 ## Next steps
 
-1. Experiment 8: grounding pre-pass -> smoke test -> train the three grounded arms -> caption scores
-   with paired bootstrap vs `nocot` -> render the best arm with the VANS video model and score.
-2. P11 transfer check: done. `nocot` captions raise CLIP-V 0.775 -> 0.781 (GT ceiling 0.806):
-   real but small, so a grounded arm needs a clear ROUGE-L gain over `nocot` to show in video metrics.
-3. If a grounded arm wins: more training rows (we use 4,000; the paper used 100K), then Joint-GRPO
-   stage 1 on the best captioner (code ready, never run in full), then a newer VLM (P8).
-4. Fix the FVD protocol (frame count / resampling) so arms are comparable; check why VANS reaches
+1. Experiment 8 (grounding): done, no gain; the ground_zoom render (68660, ~17:00 on 2026-10-16) only
+   completes its benchmark row.
+2. Decide the paper framing (P25) with three diagnostics, running since 2026-10-16:
+   copy-the-frame video baselines (P16, 68664), blind no-video captioner (P23, 68665 then its eval),
+   second `nocot` seed for the noise floor (P24, 68666 then its eval).
+   - Copy / blind baselines close to the models -> benchmark-critique paper with an event-centric
+     evaluation (P25); our negative results (experiments 6-8) are its evidence.
+   - Baselines far below -> method paper: caption RL with text rewards first (P13, P18, P19), then
+     stage 2 on test-time captions (P20), on a fair split (P3); gains must clear the P24 noise floor.
+3. Fix the FVD protocol (frame count / resampling) so arms are comparable; check why VANS reaches
    ROUGE-L 0.21 here vs 0.36 in the paper.
