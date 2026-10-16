@@ -240,6 +240,13 @@ in `scripts/vans_ground.py`.
 - **Fixed-caption video (P16 + P23, 68768):** the `const` caption rendered by the released VANS video
   model for every sample (same input clips). If its CLIP-V/CLIP-T land near the models' videos, the
   video metrics do not depend on what the caption predicts. Output `results/vans_eval/captions_const`.
+- **Sharpness / compression control for the copy baselines (68809, `scripts/vae_copy_baselines.py`):** does
+  the frozen frame win CLIP-V only because real frames are sharper? Arms: `copy_last_q5` (saved like
+  generated videos: 11 fps, quality 5), `copy_last_vae` (+ Wan2.1 VAE encode/decode, what a model that
+  copied the frame perfectly would output), `copy_input_vae`. Smoke (68808) ok; by eye the VAE round
+  trip barely softens the frame. Also seen by eye on youcook_xkKuIlYSMMU_1: the VANS video model draws a
+  new scene (corn dog on a blue-rimmed plate) rather than continuing the input's (glass bowl on a
+  wooden board), which fits the copy baselines winning CLIP-V.
 - **Second `nocot` seed (P24, 68707 train, 68708 eval, done):** ROUGE-L 0.277 (BLEU@4 0.068) vs seed 0
   0.276: +0.001 [-0.007, +0.009]. Training seed spread is small; the ±0.008 CIs come from the 400-sample
   test set. Every captioner variant vs seed 1: coconut +0.005 [-0.003, +0.014], ground_zoom +0.005
