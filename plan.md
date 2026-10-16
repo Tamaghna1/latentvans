@@ -135,8 +135,9 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
     to Grounding DINO. First attempts also failed on a missing ffmpeg in the job PATH and an OOM in
     the vision tower's batch-wide attention mask on 24 GB GPUs (batch 12 -> 4).
 - Smoke test passed (68491): grounded prompt reproduces VANS's tokenization exactly without the
-  extras; the zoom crop adds 242 image tokens. Training: 68500 (ground_text), 68501 (ground_zoom),
-  68502 (ground_think).
+  extras; the zoom crop adds 242 image tokens. Training: 68500 (ground_text, done), 68501
+  (ground_zoom, done), 68502 (ground_think, running). Caption evals: 68625 (ground_text), 68626
+  (ground_zoom).
 - Arms, all fine-tuned exactly like `nocot` (VANS VLM LoRA init, same 4,000 rows, order, 2,500 steps,
   lr 5e-5, loss on the answer):
   `ground_text` (object list with boxes added to the prompt), `ground_zoom` (+ the zoomed crop as an
@@ -145,7 +146,19 @@ better captions give better videos? Code: `scripts/ground_objects.py`, `scripts/
 - Metrics: caption BLEU / ROUGE-L on the 400-sample benchmark with paired bootstrap vs `nocot`; then
   the best arm's captions rendered by the released VANS video model (CLIP-V / CLIP-T / FVD) next to
   VANS's own captions (0.775 CLIP-V), `nocot` captions and GT captions (0.806).
-- Transfer check (job 68479, running): `nocot` captions rendered by the released VANS video model.
+- Transfer check (job 68479, done 2026-10-16): `nocot` captions rendered by the released VANS video
+  model (`results/vans_eval/captions_nocot`). Paired bootstrap over the 400 samples, 95% CI:
+
+  | Captions into the VANS video model | ROUGE-L | CLIP-V | CLIP-T | FVD |
+  |---|---|---|---|---|
+  | VANS VLM (released) | 0.209 | 0.775 | 0.287 | 1477 |
+  | `nocot` (our fine-tuned VLM) | 0.276 | 0.781 | 0.292 | 1434 |
+  | ground truth | – | 0.806 | 0.325 | 1497 |
+
+  nocot - VANS: CLIP-V +0.006 [+0.001, +0.011], CLIP-T +0.005 [+0.002, +0.008]; GT - nocot: CLIP-V
+  +0.025 [+0.020, +0.030]. **Better captions do give better videos, but weakly:** +0.067 ROUGE-L
+  closes ~19% of the CLIP-V gap to ground-truth captions. Caption quality is the right lever, and
+  ROUGE-L gains have to be large to move video metrics.
 
 ## Cluster notes
 
@@ -175,15 +188,15 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P8 | Use a more modern VLM (user asked about Qwen3.8) | user, 2026-10-10 | candidate (after a matched-backbone win) | Qwen3.8 smallest = 27.8B (video-capable): inference fits one A100, training needs 4-bit QLoRA + 2 GPUs. Practical upgrade: Qwen3-VL-8B / 4B (Oct 2025). For a paper, first show the method beats VANS with the same Qwen2.5-VL-3B, then show the gain holds with the bigger VLM; a win only from a bigger backbone is confounded. |
 | P9 | Paper: beat VANS on its benchmark | user, 2026-10-10 | candidate | Needs (1) a gain at matched backbone, (2) ablations (P5, pause/nocot), (3) a fair benchmark: original split (P3) or our rebuilt split released with protocol, same split for VANS, (4) a literature check for novelty (latent > caption for video next-event prediction). Then scale (P8). |
 | P10 | Improve captions by visual grounding with bounding boxes | user, 2026-10-15 | running | Experiment 8: arms ground_text / ground_zoom / ground_think vs nocot; best arm rendered by the VANS video model. |
-| P11 | Transfer check: do better captions give better videos? | from 2026-10-15 recommendation | running | `nocot` captions (ROUGE-L 0.276 vs VANS 0.209) rendered by the released VANS video model; compare CLIP-V with VANS captions (0.775) and GT captions (0.806). |
+| P11 | Transfer check: do better captions give better videos? | from 2026-10-15 recommendation | done: yes, weakly | `nocot` captions (ROUGE-L 0.276 vs VANS 0.209) in the released VANS video model: CLIP-V 0.781 vs 0.775 (CI [+0.001, +0.011]), GT captions 0.806. ~19% of the gap to GT closed. |
 | P12 | Detailed descriptions of what changes (objects, actions, positions) instead of a one-sentence caption, trained with video-rewarded RL | from 2026-10-15 recommendation | candidate | After P10/P11. Grounded object lists are a first version of this. |
 
 ## Next steps
 
 1. Experiment 8: grounding pre-pass -> smoke test -> train the three grounded arms -> caption scores
    with paired bootstrap vs `nocot` -> render the best arm with the VANS video model and score.
-2. P11 transfer check (parallel): if `nocot` captions raise CLIP-V toward the GT-caption ceiling,
-   caption quality is confirmed as the lever for video quality too.
+2. P11 transfer check: done. `nocot` captions raise CLIP-V 0.775 -> 0.781 (GT ceiling 0.806):
+   real but small, so a grounded arm needs a clear ROUGE-L gain over `nocot` to show in video metrics.
 3. If a grounded arm wins: more training rows (we use 4,000; the paper used 100K), then Joint-GRPO
    stage 1 on the best captioner (code ready, never run in full), then a newer VLM (P8).
 4. Fix the FVD protocol (frame count / resampling) so arms are comparable; check why VANS reaches
