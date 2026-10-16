@@ -207,7 +207,7 @@ in `scripts/vans_ground.py`.
   video metrics reward reproducing the scene, not showing the next event. CLIP-T separates only
   videos made from the right caption, so it is the one video metric with some signal. Caveats: our
   rebuilt split, not the paper's (P3); real frames also look sharper than generated ones, which CLIP-V
-  may reward. Next: does the same hold on the paper's split / other video-as-answer benchmarks, and
+  may reward (ruled out by the 68809 control below). Next: does the same hold on the paper's split / other video-as-answer benchmarks, and
   which metric does track the event (VLM judge, P25)?
 - **Text-only baselines (P23, `scripts/text_baselines.py`, no model, no video):** ROUGE-L on the same
   400 samples against VANS's ground-truth captions (VANS's own `ENG_GT_Caption`, so the caption style is
@@ -247,6 +247,22 @@ in `scripts/vans_ground.py`.
   trip barely softens the frame. Also seen by eye on youcook_xkKuIlYSMMU_1: the VANS video model draws a
   new scene (corn dog on a blue-rimmed plate) rather than continuing the input's (glass bowl on a
   wooden board), which fits the copy baselines winning CLIP-V.
+  **Done (2026-10-16 21:57):** paired over the 400 samples (95% CI):
+
+  | Answer video | CLIP-V | CLIP-T | FVD | CLIP-V vs VANS | CLIP-V vs GT-caption videos |
+  |---|---|---|---|---|---|
+  | `copy_last` (near-lossless) | 0.811 | 0.289 | 903 | +0.035 [+0.028, +0.043] | +0.004 [-0.003, +0.012] |
+  | `copy_last_q5` | 0.806 | 0.288 | 904 | +0.031 [+0.024, +0.038] | -0.000 [-0.008, +0.007] |
+  | `copy_last_vae` | 0.809 | 0.288 | 912 | +0.034 [+0.026, +0.041] | +0.002 [-0.005, +0.009] |
+  | `copy_input_vae` | 0.806 | 0.288 | 240 | +0.031 [+0.024, +0.037] | -0.001 [-0.007, +0.006] |
+
+  VAE + compression cost the frozen frame 0.002 CLIP-V (q5 alone 0.004; VAE-smoothed frames compress
+  better). `copy_last_vae` still beats VANS on 285/400 samples, `nocot`-caption videos by +0.028
+  [+0.021, +0.035] and `ground_zoom`-caption videos by +0.023 [+0.017, +0.030]; on COIN it beats even
+  GT-caption videos (+0.011 [+0.002, +0.020]; YouCook -0.006 [-0.017, +0.005]). CLIP-T: vs VANS +0.001
+  [-0.003, +0.004], vs `nocot` -0.004 [-0.007, -0.000]. **Sharpness is not why the copies win: a video
+  model that output the last input frame, unchanged, would top the CLIP-V table and tie every model on
+  CLIP-T.**
 - **Second `nocot` seed (P24, 68707 train, 68708 eval, done):** ROUGE-L 0.277 (BLEU@4 0.068) vs seed 0
   0.276: +0.001 [-0.007, +0.009]. Training seed spread is small; the ±0.008 CIs come from the 400-sample
   test set. Every captioner variant vs seed 1: coconut +0.005 [-0.003, +0.014], ground_zoom +0.005
@@ -286,7 +302,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P13 | GRPO stage 1 on the best captioner, text rewards first (ROUGE-L + format, no rendered video), then add the CLIP-V reward | 2026-10-16 literature review (VANS Table 2a; SCST-style metric RL) | candidate, top priority | VANS: SFT -> stage 1 = ROUGE-L +0.082, BLEU@4 +0.075, CLIP-V +0.015, CLIP-T +0.032 (VDM frozen, so the video gain comes from captions alone). Our `nocot` (0.276) ≈ their SFT (0.281). Text-only rewards need no video rendering, so it is far cheaper than the full stage 1 (~4 min/step). Watch for templated captions (keep KL, check CLIP-V/T transfer). |
 | P14 | GRPO stage 2 (Flow-GRPO on the DiT): reward CLIP-V to the target video + CLIPScore to the anchor caption | VANS Table 2a | candidate, after P13 | VANS: CLIP-V +0.022, CLIP-T +0.030, FVD -1.9 over stage 1. Most expensive step (video rollouts, group 8, ~1K steps). Needs the FVD protocol fixed first to report FVD. |
 | P15 | Test-time selection: MBR captions (N samples, pick the one with the highest mean ROUGE-L to the others); best-of-N videos picked by the medoid (CLIP-V to the other samples) or CLIPScore to the caption | MBR decoding literature (arXiv 2311.05263, 2401.02749) | candidate, cheap for captions | No training. Captions: N=8–16 samples of a 3B VLM, minutes. Videos cost N x ~95 s per sample. |
-| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | done: frozen frame beats all models | Experiment 9: copy_last CLIP-V 0.811 vs VANS 0.775, nocot captions 0.781, GT captions 0.806; CLIP-T ties the models (0.289 vs 0.287/0.292); input clip FVD 237 vs VANS 1477. |
+| P16 | Diagnostic: copy-the-last-input-frame baseline (static video) through CLIP-V / FVD | 2026-10-16 review | done: frozen frame beats all models | Experiment 9: copy_last CLIP-V 0.811 vs VANS 0.775, nocot captions 0.781, GT captions 0.806; CLIP-T ties the models (0.289 vs 0.287/0.292); input clip FVD 237 vs VANS 1477. Survives the VAE + compression control (68809): copy_last_vae 0.809, +0.034 [+0.026, +0.041] over VANS. |
 | P17 | More SFT rows: 4K -> the full procedural training set (VANS used 30K procedural of 100K) | VANS setup | candidate | Run before P13 if cheap enough; the RL starting point matters. |
 | P18 | Stage 1 reward fixes: (a) drop the format reward or make it a gate (`nocot` never writes [Think], so r_format is 0 except on rare samples, where its +1 swamps ROUGE differences of ~0.05); (b) render all G captions of a group with the same seed (now seed + k, so CLIP-V differences partly measure noise); (c) normalize each reward within the group before summing (GDPO, arXiv 2601.05242), else ROUGE's larger spread drowns CLIP-V; (d) add BLEU@4 (a benchmark metric) to the reward; (e) several prompts per step instead of 1 | 2026-10-16 objective review (user asked to research the RL objective) | candidate, do with P13 | Log each reward's within-group std first to confirm (c). (a) and (b) are bugs for our setup and are cheap to fix. |
 | P19 | Visual reward without rendering: CLIP similarity between the caption and the ground-truth target frames | 2026-10-16 objective review | candidate | Rewards captions that describe what the target video shows, at text-reward cost; can replace or thin out the rendered CLIP-V reward. Compare against rendered CLIP-V on a few hundred captions first. |
@@ -295,7 +311,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P22 | Reward-hacking guard: train with a different CLIP (ViT-L/14 or SigLIP, + DINOv2) than the ViT-B/32 used for scoring; report both | 2026-10-16 objective review (Pref-GRPO arXiv 2508.20751 on hacking) | candidate | A gain that shows only under the training CLIP is reward hacking, not better videos. |
 | P23 | Blind baseline: predict the next-step caption from the instruction text alone (no video), and a "repeat the current step" caption | 2026-10-16 paper-direction review (user asked "am i on the right track") | done: fixed caption 0.231 (beats released VANS 0.209), blind VLM 0.246, nocot 0.276; video worth ~0.03 ROUGE-L | If text-only gets close to `nocot`'s 0.276 ROUGE-L, the caption metric mostly measures language priors, not watching the video. Decides the paper framing together with P16 and P24. |
 | P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | done: seeds differ by 0.001 ROUGE-L [-0.007, +0.009]; no captioner variant beats either seed | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
-| P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | candidate, depends on P16/P23/P24 | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). |
+| P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | candidate, depends on P16/P23/P24 | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). Scope: every diagnostic so far is on the procedural half (COIN/YouCook2); VANS's predictive half was not released, so a general claim needs predictive data (ask the authors or rebuild). |
 
 ## Next steps
 
