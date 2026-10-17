@@ -240,6 +240,14 @@ in `scripts/vans_ground.py`.
 - **Fixed-caption video (P16 + P23, 68768):** the `const` caption rendered by the released VANS video
   model for every sample (same input clips). If its CLIP-V/CLIP-T land near the models' videos, the
   video metrics do not depend on what the caption predicts. Output `results/vans_eval/captions_const`.
+  **Done (2026-10-17 01:09):** CLIP-V 0.688, CLIP-T 0.230, FVD 5271 (VANS 0.775 / 0.287 / 1477). Paired
+  vs VANS: CLIP-V -0.087 [-0.097, -0.078] (COIN -0.144, YouCook -0.031), CLIP-T -0.057 [-0.062, -0.052];
+  below VANS on 344/400 samples. **The video metrics do depend on the caption, through the scene:** a
+  cooking caption on COIN's non-cooking tasks is punished hard, and on YouCook (still kitchens, wrong
+  dish) far less. With the copy baselines: right scene and no event (frozen frame) >= every model,
+  wrong scene << every model, so CLIP-V/CLIP-T measure scene match, not whether the next event
+  happens. **The two halves of the benchmark also disagree:** ROUGE-L ranks the fixed caption above
+  released VANS (0.231 vs 0.209), the video metrics rank its video far below (0.688 vs 0.775).
 - **Sharpness / compression control for the copy baselines (68809, `scripts/vae_copy_baselines.py`):** does
   the frozen frame win CLIP-V only because real frames are sharper? Arms: `copy_last_q5` (saved like
   generated videos: 11 fps, quality 5), `copy_last_vae` (+ Wan2.1 VAE encode/decode, what a model that
@@ -319,7 +327,8 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
    0.781 (+0.0045, borderline), CLIP-T n.s.
 2. Decide the paper framing (P25) with three diagnostics, running since 2026-10-16:
    copy-the-frame video baselines (P16: done, a frozen frame beats every model on CLIP-V and ties them
-   on CLIP-T -> leaning to the critique framing), blind no-video captioner (P23, done: video worth ~0.03 ROUGE-L; a fixed caption beats released VANS),
+   on CLIP-T, and survives the VAE/compression control; a fixed wrong caption's video scores far below
+   the models -> the video metrics measure scene match, not the event; leaning to the critique framing), blind no-video captioner (P23, done: video worth ~0.03 ROUGE-L; a fixed caption beats released VANS),
    second `nocot` seed for the noise floor (P24, done: seeds differ by 0.001; test-set noise ±0.008).
    - Copy / blind baselines close to the models -> benchmark-critique paper with an event-centric
      evaluation (P25); our negative results (experiments 6-8) are its evidence.
