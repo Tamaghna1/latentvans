@@ -15,6 +15,22 @@ video model, and latent reasoning in the VLM) is dropped: four tests found no ga
 through visual grounding with bounding boxes (experiment 8), scored on the VANS benchmark for both
 captions and videos.
 
+**Objective changed 2026-10-20 (user decision; this is the user's MTech thesis, due in 1-3 months).**
+Grounding gave no gain (experiment 8), and experiment 9 showed the benchmark's video metrics reward
+reproducing the input scene, not showing the next event. A pure benchmark critique is not enough for
+a thesis, so the thesis is analysis + evaluation + method (P26):
+1. Analysis (done, experiment 9): copy, blind and fixed-caption baselines; current metrics measure
+   scene match and caption boilerplate.
+2. Event-centric evaluation (P27): a VLM judge scores whether the true next step happens in the
+   answer video and whether the input scene is kept, validated against human labels.
+3. Method: scene-anchored generation first (P28), the video model continues the input scene and
+   changes only what the step changes; then an event-rewarded captioner (P29). Final system: both.
+Earlier methods (latent, Coconut, grounding) become ablations / negative results.
+Not tied to VANS (user, 2026-10-20: "you dont need to stick strictly to the vans paper"): any video
+next-event prediction setup is fine, so other video models (e.g. image-to-video models that start
+from the last frame), other datasets and other baselines are all in scope. VANS stays as a baseline
+and its benchmark as one test set.
+
 ## Experiments so far
 
 ### 1. Stage 0 v1: latent grounding SFT (Sep 2026)
@@ -319,9 +335,23 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P22 | Reward-hacking guard: train with a different CLIP (ViT-L/14 or SigLIP, + DINOv2) than the ViT-B/32 used for scoring; report both | 2026-10-16 objective review (Pref-GRPO arXiv 2508.20751 on hacking) | candidate | A gain that shows only under the training CLIP is reward hacking, not better videos. |
 | P23 | Blind baseline: predict the next-step caption from the instruction text alone (no video), and a "repeat the current step" caption | 2026-10-16 paper-direction review (user asked "am i on the right track") | done: fixed caption 0.231 (beats released VANS 0.209), blind VLM 0.246, nocot 0.276; video worth ~0.03 ROUGE-L | If text-only gets close to `nocot`'s 0.276 ROUGE-L, the caption metric mostly measures language priors, not watching the video. Decides the paper framing together with P16 and P24. |
 | P24 | Noise floor: retrain `nocot` with a second seed (data order) and score it | 2026-10-16 paper-direction review | done: seeds differ by 0.001 ROUGE-L [-0.007, +0.009]; no captioner variant beats either seed | Every captioner change so far (cot, coconut, ground_text, ground_zoom) lands within ±0.006 ROUGE-L of `nocot`; a second seed shows whether that is just run-to-run spread. Any method claim needs gains clearly above it. |
-| P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | candidate, depends on P16/P23/P24 | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). Scope: every diagnostic so far is on the procedural half (COIN/YouCook2); VANS's predictive half was not released, so a general claim needs predictive data (ask the authors or rebuild). |
+| P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | folded into P26 (2026-10-20): analysis + motivation chapter, not the whole thesis | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). Scope: every diagnostic so far is on the procedural half (COIN/YouCook2); VANS's predictive half was not released, so a general claim needs predictive data (ask the authors or rebuild). |
+| P26 | Thesis objective: analysis (experiment 9) + event-centric evaluation (P27) + method (P28 then P29); "it should not be just benchmarking" | user, 2026-10-20 (MTech thesis, due in 1-3 months) | running | Main claim to aim for: the first model that beats the frozen-frame baseline on CLIP-V and also shows the right next event (P27 judge). Earlier negative results are ablations. |
+| P27 | Event-centric evaluation: VLM judge (Qwen2.5-VL-7B-Instruct, P(yes)) asks (a) does the answer video show the true next step (benchmark's step sentence), (b) is it the same scene as the input's last frame | 2026-10-20 thesis plan | candidate | Score every existing arm (copy_last, copy_input, const, vans, nocot, GT-caption videos). Must rank GT-caption videos > model videos > copies on (a), and copies high on (b). Validate on ~100 samples labelled by the user (agreement / correlation). Eval judge differs from any training reward judge (P29). |
+| P28 | Scene-anchored generation: the video model continues the input scene instead of redrawing it | 2026-10-20 thesis plan; seen on youcook_xkKuIlYSMMU_1 (VANS draws a new plate and table) | candidate, first | Step 0: read how VANS uses its 6 reference latents. Step 1 (no training): (a) start denoising from the noised VAE latent of the frozen last frame (SDEdit-style, strength sweep), captions from `nocot`; (b) an off-the-shelf image-to-video model started from the last input frame (e.g. Wan2.2-TI2V-5B, Wan2.1-I2V, CogVideoX-I2V; check licence, size vs our 24-48 GB GPUs) with the same captions. Not tied to VANS's video model (user, 2026-10-20). Step 2: fine-tune the DiT (LoRA) with the last input frame as a clean first latent frame, on data/vans_train target clips. Win = CLIP-V above copy_last (0.811) and higher P27 event score than VANS. |
+| P29 | Event-rewarded captioner: GRPO on the captioner with a judge reward (does the caption describe the true next step / does its rendered video show it) instead of ROUGE-L | 2026-10-20 thesis plan; builds on P13/P18/P19 | candidate, after P28 | Training judge differs from the P27 eval judge (reward hacking, cf. P22). Compare to `nocot` on P27, ROUGE-L, and through the P28 video model. |
 
 ## Next steps
+
+Thesis plan (2026-10-20, P26), roughly by week:
+1. Week 1: P28 step 0-1 (training-free anchoring, strength sweep) and P27 judge on all existing arms;
+   the user labels ~100 samples to validate the judge.
+2. Weeks 2-4: P28 step 2 (anchored DiT fine-tune); score with CLIP-V/CLIP-T/FVD and P27.
+3. Weeks 4-7: P29 event-rewarded captioner; combine with P28 for the final system.
+4. Weeks 7+: ablations (earlier methods), FVD protocol fix, writing. Predictive data beyond the
+   procedural half only if time allows.
+
+Earlier next steps (kept for the record):
 
 1. Experiment 8 (grounding): done, no gain. ground_zoom render (68660, done): CLIP-V 0.785 vs nocot
    0.781 (+0.0045, borderline), CLIP-T n.s.
