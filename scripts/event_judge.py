@@ -105,6 +105,12 @@ def main():
     arm = os.path.basename(os.path.normpath(arm_dir))
     rows = [json.loads(l) for l in open(os.path.join(args.bench_dir, "benchmark.jsonl"))]
     rows = rows[:args.limit] if args.limit else rows
+
+    def video_path(r):
+        return os.path.join(args.bench_dir, r["target_video"]) if real else os.path.join(arm_dir, "videos", f"{r['sample_id']}.mp4")
+
+    rows = [r for r in rows if os.path.exists(video_path(r))]  # arms generated on a subset (--every)
+    log(f"{arm}: {len(rows)} videos")
     mine = rows[args.shard::args.n_shards]
     os.makedirs(arm_dir, exist_ok=True)
     out_path = os.path.join(arm_dir, f"judge_{tag}_shard{args.shard}.jsonl")
@@ -116,11 +122,7 @@ def main():
         sid = r["sample_id"]
         if sid in done:
             continue
-        path = os.path.join(args.bench_dir, r["target_video"]) if real else os.path.join(arm_dir, "videos", f"{sid}.mp4")
-        if not os.path.exists(path):
-            log(f"WARNING: no video for {sid}, skipped")
-            continue
-        video = load_frames(path, n=args.n_frames)
+        video = load_frames(video_path(r), n=args.n_frames)
         rec = {"sample_id": sid, "source": r["source"],
                "p_next": judge.p_yes(NEXT_Q.format(step=r["target_sentence"]), video),
                "p_current": judge.p_yes(NEXT_Q.format(step=r["input_sentence"]), video),
