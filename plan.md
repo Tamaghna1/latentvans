@@ -293,6 +293,45 @@ in `scripts/vans_ground.py`.
   [-0.003, +0.013], ground_text +0.000, cot -0.002, ground_think -0.007 [-0.016, +0.002]: none
   significant against either seed. Detecting a +0.005 effect would need roughly 4x the test samples.
 
+## How to run (moved here from CLAUDE.md, 2026-10-20)
+
+- **Where.** Cluster `tamaghnam@10.16.63.23`, root `/scratch/users/anirban/tamaghnam/latentvans` (`$S`).
+  Envs: `envs/vans` (most scripts) and `envs/latentvans` (older pilot scripts, ffmpeg).
+  - Never run jobs, Python, scans or downloads on the login node: everything goes through `sbatch`. Quick
+    checks can use `srun --overlap --jobid=<own running job>`.
+  - Edit in the local checkout (its `.git` is stale), `scp` the files to `$S`, and commit/push from the
+    cluster. Diff the cluster `plan.md` against `HEAD` before overwriting it, since another session also
+    edits it.
+  - Ask the user before any download over ~1 GB or any deletion.
+- **Submitting.** From `$S/scripts`: `bash tmux_job.sh <name> [VAR=value ...] sbatch [opts] <script.sh>`.
+  - The tmux session only follows the logs; logs go to `$S/logs/<job>_<id>.out/.err`.
+  - Partitions: `short,long,ada,medium`, with `--exclude=cn1,cn2,cn7` (cn2 has NFS stalls).
+  - `sbatch --test-only` shows where and when a job would start.
+  - Chain follow-ups with `--dependency=afterany:<id>`.
+  - `LIMIT=N` makes a smoke test; there are no unit tests.
+  - Log runs to W&B project `latentvans-vans-eval`.
+- **Arm layout.** Every answer set is `results/vans_eval/<arm>/` with `videos/<sample_id>.mp4` and
+  `captions_shard*.jsonl`. Generators are resumable and sharded one shard per GPU.
+  - Test set: `data/vans_eval/benchmark.jsonl` (fields include `input_video`, `target_video`, `gt_caption`,
+    `input_sentence`, `target_sentence`).
+  - Generators: `vans_eval_generate.py` (vans / vans_oracle / captions arms), `anchor_generate.py`,
+    `copy_baselines.py`, `vae_copy_baselines.py`.
+  - Fixed render settings for every arm: 352x640, 33 frames, 50 steps, CFG 5, seed 0,
+    `save_video(fps=11, quality=5)`, ~100 s/video.
+- **Scoring.**
+  - `vans_eval_metrics.py` writes `<arm>/metrics.json` (per_sample) and appends to `summary.jsonl`.
+  - `event_judge.py` writes `<arm>/judge_<tag>_shard*.jsonl` and appends to `judge_summary.jsonl`.
+  - `compare_captions.py` scores caption ROUGE-L.
+  - Compare arms with a paired bootstrap 95% CI over the same samples (noise about ±0.008 ROUGE-L).
+- **Captioners.** `vans_coconut.py` (arms nocot / cot / coconut / pause; nocot is the best) and
+  `vans_ground.py`. Their captions are in `results/vans_coconut|vans_ground/<arm>/captions_shard*.jsonl`.
+- **VANS code.** `code/VANS` is upstream @ `4a931a8`.
+  - Import it via `vans_rl_common.vans_imports`.
+  - `vans_eval_generate.build_pipe` is the shared loader: DiT from `VANS_vlm.safetensors`, umT5 on the CPU
+    between encodes.
+  - The input clip conditions the model through 6 clean reference latents prepended at every step; nothing
+    pins the first output frame.
+
 ## Cluster notes
 
 - 2026-10-10 17:03: scratch quota (~100 GB) filled while two runs saved checkpoints; the caption arm
