@@ -287,50 +287,30 @@ in `scripts/vans_ground.py`.
   [-0.003, +0.004], vs `nocot` -0.004 [-0.007, -0.000]. **Sharpness is not why the copies win: a video
   model that output the last input frame, unchanged, would top the CLIP-V table and tie every model on
   CLIP-T.**
+- **Event judge (P27, 69637, Qwen2.5-VL-3B, partial 2026-10-21 02:10):** P(yes) to "does this video show
+  <next-step sentence>" (p_next), the same for the current step (p_current), and "same scene as the last input
+  frame" (p_scene); 8 frames per video. Means over the 400 samples:
+
+  | Answer video | p_next | p_current | p_scene |
+  |---|---|---|---|
+  | real next clip (target) | **0.704** | 0.478 | 0.492 |
+  | VANS video model, GT captions | 0.659 | 0.418 | 0.520 |
+  | input clip itself (`copy_input`) | 0.397 | **0.739** | 0.525 |
+  | frozen last frame (`copy_last`) | 0.324 | 0.537 | 0.544 |
+  | released VANS (178/400 so far) | 0.256 | 0.426 | 0.527 |
+
+  Paired: target - copy_last p_next +0.380 [+0.349, +0.411]; GT-caption videos - copy_last +0.334 [+0.302,
+  +0.368]; target - GT-caption videos +0.045 [+0.021, +0.070]. **p_next ranks what CLIP-V cannot: the real
+  next clip and right-caption videos far above the copies, and p_current is highest for the input clip (the
+  current step), as it should be.** Released VANS so far scores below the frozen frame on p_next.
+  **p_scene is useless with the 3B judge** (0.49-0.54 for everything, incl. the frozen frame, which is the
+  input frame): replace it with an embedding similarity to the last input frame. Not yet validated against
+  human labels.
 - **Second `nocot` seed (P24, 68707 train, 68708 eval, done):** ROUGE-L 0.277 (BLEU@4 0.068) vs seed 0
   0.276: +0.001 [-0.007, +0.009]. Training seed spread is small; the ±0.008 CIs come from the 400-sample
   test set. Every captioner variant vs seed 1: coconut +0.005 [-0.003, +0.014], ground_zoom +0.005
   [-0.003, +0.013], ground_text +0.000, cot -0.002, ground_think -0.007 [-0.016, +0.002]: none
   significant against either seed. Detecting a +0.005 effect would need roughly 4x the test samples.
-
-## How to run (moved here from CLAUDE.md, 2026-10-20)
-
-- **Where.** Cluster `tamaghnam@10.16.63.23`, root `/scratch/users/anirban/tamaghnam/latentvans` (`$S`).
-  Envs: `envs/vans` (most scripts) and `envs/latentvans` (older pilot scripts, ffmpeg).
-  - Never run jobs, Python, scans or downloads on the login node: everything goes through `sbatch`. Quick
-    checks can use `srun --overlap --jobid=<own running job>`.
-  - Edit in the local checkout (its `.git` is stale), `scp` the files to `$S`, and commit/push from the
-    cluster. Diff the cluster `plan.md` against `HEAD` before overwriting it, since another session also
-    edits it.
-  - Ask the user before any download over ~1 GB or any deletion.
-- **Submitting.** From `$S/scripts`: `bash tmux_job.sh <name> [VAR=value ...] sbatch [opts] <script.sh>`.
-  - The tmux session only follows the logs; logs go to `$S/logs/<job>_<id>.out/.err`.
-  - Partitions: `short,long,ada,medium`, with `--exclude=cn1,cn2,cn7` (cn2 has NFS stalls).
-  - `sbatch --test-only` shows where and when a job would start.
-  - Chain follow-ups with `--dependency=afterany:<id>`.
-  - `LIMIT=N` makes a smoke test; there are no unit tests.
-  - Log runs to W&B project `latentvans-vans-eval`.
-- **Arm layout.** Every answer set is `results/vans_eval/<arm>/` with `videos/<sample_id>.mp4` and
-  `captions_shard*.jsonl`. Generators are resumable and sharded one shard per GPU.
-  - Test set: `data/vans_eval/benchmark.jsonl` (fields include `input_video`, `target_video`, `gt_caption`,
-    `input_sentence`, `target_sentence`).
-  - Generators: `vans_eval_generate.py` (vans / vans_oracle / captions arms), `anchor_generate.py`,
-    `copy_baselines.py`, `vae_copy_baselines.py`.
-  - Fixed render settings for every arm: 352x640, 33 frames, 50 steps, CFG 5, seed 0,
-    `save_video(fps=11, quality=5)`, ~100 s/video.
-- **Scoring.**
-  - `vans_eval_metrics.py` writes `<arm>/metrics.json` (per_sample) and appends to `summary.jsonl`.
-  - `event_judge.py` writes `<arm>/judge_<tag>_shard*.jsonl` and appends to `judge_summary.jsonl`.
-  - `compare_captions.py` scores caption ROUGE-L.
-  - Compare arms with a paired bootstrap 95% CI over the same samples (noise about ±0.008 ROUGE-L).
-- **Captioners.** `vans_coconut.py` (arms nocot / cot / coconut / pause; nocot is the best) and
-  `vans_ground.py`. Their captions are in `results/vans_coconut|vans_ground/<arm>/captions_shard*.jsonl`.
-- **VANS code.** `code/VANS` is upstream @ `4a931a8`.
-  - Import it via `vans_rl_common.vans_imports`.
-  - `vans_eval_generate.build_pipe` is the shared loader: DiT from `VANS_vlm.safetensors`, umT5 on the CPU
-    between encodes.
-  - The input clip conditions the model through 6 clean reference latents prepended at every step; nothing
-    pins the first output frame.
 
 ## Cluster notes
 
@@ -377,7 +357,7 @@ Status: `running` / `queued` / `candidate` / `done` / `dropped`.
 | P25 | Paper framing B: "video-as-answer benchmarks do not measure next-event prediction", with an event-centric evaluation (VLM judge: did the predicted step happen; object-state checks) and baselines across VANS and other models | 2026-10-16 paper-direction review | folded into P26 (2026-10-20): analysis + motivation chapter, not the whole thesis | Pursue if copy-frame (P16) and blind (P23) baselines score close to the models. Our negative results (reasoning, latent, grounding add nothing; caption gains transfer weakly to video) become evidence. Otherwise framing A: method paper via P13/P19/P20 on a fair split (P3). Scope: every diagnostic so far is on the procedural half (COIN/YouCook2); VANS's predictive half was not released, so a general claim needs predictive data (ask the authors or rebuild). |
 | P26 | Thesis objective: analysis (experiment 9) + event-centric evaluation (P27) + method (P28 then P29); "it should not be just benchmarking" | user, 2026-10-20 (MTech thesis, due in 1-3 months) | running | Main claim to aim for: the first model that beats the frozen-frame baseline on CLIP-V and also shows the right next event (P27 judge). Earlier negative results are ablations. |
 | P27 | Event-centric evaluation (`scripts/event_judge.py/.sh`; judge = Qwen2.5-VL-3B-Instruct, user decision 2026-10-20, no 7B; smoke 69634 ok, all arms 69637): VLM judge (P(yes)) asks (a) does the answer video show the true next step (benchmark's step sentence), (b) is it the same scene as the input's last frame | 2026-10-20 thesis plan | candidate | Score every existing arm (copy_last, copy_input, const, vans, nocot, GT-caption videos). Must rank GT-caption videos > model videos > copies on (a), and copies high on (b). Validate on ~100 samples labelled by the user (agreement / correlation). Eval judge differs from any training reward judge (P29). |
-| P28 | Scene-anchored generation: the video model continues the input scene instead of redrawing it | 2026-10-20 thesis plan; seen on youcook_xkKuIlYSMMU_1 (VANS draws a new plate and table) | candidate, first | Step 0 (done 2026-10-20): VANS encodes the input clip (33 frames -> 9 latents), prepends 6 of them, clean, to the noisy latents at every step at the same timestep, and drops them after; nothing ties the output's first frame to the input, so it can redraw the scene. Step 1 (no training, `scripts/anchor_generate.py/.sh`): (a0) first-frame replacement: reset the first generated latent to the last input frame's latent, noised to each step's level; (a) start denoising from the noised VAE latent of the frozen last frame (SDEdit-style, strength sweep), captions from `nocot`; (b) an off-the-shelf image-to-video model started from the last input frame (e.g. Wan2.2-TI2V-5B, Wan2.1-I2V, CogVideoX-I2V; check licence, size vs our 24-48 GB GPUs) with the same captions. Not tied to VANS's video model (user, 2026-10-20). Step 2: fine-tune the DiT (LoRA) with the last input frame as a clean first latent frame, on data/vans_train target clips. Win = CLIP-V above copy_last (0.811) and higher P27 event score than VANS. Smoke (69635, ffrep + SDEdit 0.5, `nocot` captions, 2 YouCook samples, by eye): the video stays in the input scene (same bowl / pan / stove) where VANS and plain `nocot` redraw it; on the corn-dog sample the step needs a new place (the fryer) and the anchored video morphs the batter in the bowl instead: anchoring can block steps that change location. Screen on 100 samples (every 4th row): ffrep 69638, SDEdit 0.5 69639. |
+| P28 | Scene-anchored generation: the video model continues the input scene instead of redrawing it | 2026-10-20 thesis plan; seen on youcook_xkKuIlYSMMU_1 (VANS draws a new plate and table) | candidate, first | Step 0 (done 2026-10-20): VANS encodes the input clip (33 frames -> 9 latents), prepends 6 of them, clean, to the noisy latents at every step at the same timestep, and drops them after; nothing ties the output's first frame to the input, so it can redraw the scene. Step 1 (no training, `scripts/anchor_generate.py/.sh`): (a0) first-frame replacement: reset the first generated latent to the last input frame's latent, noised to each step's level; (a) start denoising from the noised VAE latent of the frozen last frame (SDEdit-style, strength sweep), captions from `nocot`; (b) an off-the-shelf image-to-video model started from the last input frame (e.g. Wan2.2-TI2V-5B, Wan2.1-I2V, CogVideoX-I2V; check licence, size vs our 24-48 GB GPUs) with the same captions. Not tied to VANS's video model (user, 2026-10-20). Step 2: fine-tune the DiT (LoRA) with the last input frame as a clean first latent frame, on data/vans_train target clips. Win = CLIP-V above copy_last (0.811) and higher P27 event score than VANS. Smoke (69635, ffrep + SDEdit 0.5, `nocot` captions, 2 YouCook samples, by eye): the video stays in the input scene (same bowl / pan / stove) where VANS and plain `nocot` redraw it; on the corn-dog sample the step needs a new place (the fryer) and the anchored video morphs the batter in the bowl instead: anchoring can block steps that change location. Screen on 100 samples (every 4th row; 50 COIN + 50 YouCook): ffrep (69638, done) CLIP-V 0.784 vs `nocot` 0.779 (+0.005 [+0.002, +0.009]), VANS 0.777, copy_last 0.816 (-0.032 [-0.046, -0.019]); CLIP-T +0.001 n.s.; judge p_next 0.425 vs copy_last 0.354 on the subset (`nocot` not judged yet). Pinning the first frame anchors only that frame; the rest still drifts. SDEdit 0.5: 69639. |
 | P29 | Event-rewarded captioner: GRPO on the captioner with a judge reward (does the caption describe the true next step / does its rendered video show it) instead of ROUGE-L | 2026-10-20 thesis plan; builds on P13/P18/P19 | candidate, after P28 | Training judge differs from the P27 eval judge (reward hacking, cf. P22). Compare to `nocot` on P27, ROUGE-L, and through the P28 video model. |
 
 ## Next steps
