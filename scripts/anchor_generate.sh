@@ -12,7 +12,7 @@ set -euo pipefail
 
 # Training-free scene anchoring (anchor_generate.py, plan.md P28 step 1), one shard per GPU, then CLIP/FVD metrics
 # and the event judge (if downloaded).
-#   NAME=<arm> CAPS=nocot|gt|<glob> [FFREP=1] [STRENGTH=0.5] [EVERY=4] [LIMIT=N: smoke, no scoring]
+#   NAME=<arm> CAPS=nocot|gt|<glob> [FFREP=1] [STRENGTH=0.5] [EVERY=4] [JUDGE=<checkpoints dir>] [LIMIT=N: smoke, no scoring]
 T=/scratch/users/anirban/tamaghnam
 S=$T/latentvans
 BENCH=$S/data/vans_eval
@@ -38,7 +38,7 @@ for p in ${PIDS[@]}; do wait $p; done
 
 $PY $S/scripts/vans_eval_metrics.py --bench_dir $BENCH --arm_dir $OUT/$NAME --i3d $S/checkpoints/i3d_torchscript.pt \
   --summary $OUT/summary.jsonl --wandb_project latentvans-vans-eval
-J=$S/checkpoints/Qwen2.5-VL-7B-Instruct
+J=$S/checkpoints/${JUDGE:-Qwen2.5-VL-3B-Instruct}
 [[ -f $J/config.json ]] && $PY $S/scripts/event_judge.py --bench_dir $BENCH --arm_dir $OUT/$NAME --results_dir $OUT \
   --qwen_dir $J --wandb_project latentvans-vans-eval
 echo "Done: $(date)"
